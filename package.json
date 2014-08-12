@@ -1,0 +1,27 @@
+{
+  "name": "git-release",
+  "version": "1.0.0",
+  "description": "Bump semver in multiple files, commit, tag, and push optionally.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hail2u/node-git-release.git"
+  },
+  "keywords": [
+    "git",
+    "semver",
+    "release"
+  ],
+  "author": "Kyo Nagashima <kyo@hail2u.net> (http://hail2u.net/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hail2u/node-git-release/issues"
+  },
+  "homepage": "https://github.com/hail2u/node-git-release",
+  "bin": {
+    "git-release": "./git-release.js"
+  },
+  "dependencies": {
+    "async": "^0.9.0",
+    "semver": "^3.0.1"
+  }
+}
