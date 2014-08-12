@@ -9,6 +9,8 @@ INSTALL
 
     $ npm install -g git-release
 
+Not published yet.
+
 
 REQUIREMENT
 -----------
@@ -19,7 +21,7 @@ Git.
 OPTIONS
 -------
 
-All options stored in Git's config file.
+All options are stored in Git's config file.
 
 
 ### release.target
@@ -28,9 +30,9 @@ Specify target file path and line number with `<filepath>:<lineno>`:
 
     $ git config release.target package.json:4
 
-You can have multiple target. This can be configure with `--add` option:
+You can have multiple target. This can be configured with `--add` option:
 
-    $ git config --add release.target <target>:<line>
+    $ git config --add release.target lib/foo.js:7
 
 
 ### release.push
