@@ -39,7 +39,7 @@ async.series({
         return next(err);
       }
 
-      gitroot = path.normalize(stdout.replace(/[\r\n]*$/, ''));
+      gitroot = path.normalize(stdout.trim());
 
       console.log(gitroot);
       next();
@@ -53,7 +53,7 @@ async.series({
         return next(err);
       }
 
-      gitdir = path.normalize(stdout.replace(/[\r\n]*$/, ''));
+      gitdir = path.normalize(stdout.trim());
 
       console.log(gitdir);
       next();
