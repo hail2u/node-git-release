@@ -18,6 +18,14 @@ REQUIREMENT
 Git.
 
 
+USAGE
+-----
+
+    $ git release [major|minor|patch]
+
+If something occured, command stops with stack trace.
+
+
 OPTIONS
 -------
 
@@ -40,14 +48,6 @@ You can have multiple target. This can be configured with `--add` option:
 Push after tagging a commit (default false):
 
     $ git config release.push true
-
-
-USAGE
------
-
-    $ git release [major|minor|patch]
-
-If something occured, command stops with stack trace.
 
 
 LICENSE
