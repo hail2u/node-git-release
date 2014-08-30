@@ -1,6 +1,6 @@
 {
   "name": "git-release",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Bump semver in multiple files, commit, tag, and push optionally.",
   "repository": {
     "type": "git",
