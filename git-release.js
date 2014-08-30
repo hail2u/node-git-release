@@ -12,7 +12,6 @@ var reSemver = /\d+\.\d+\.\d+([0-9A-Za-z-])?/;
 
 var incTarget = '';
 var gitroot = '';
-var gitdir = '';
 var config = {
   targets: [],
   push: false
@@ -46,68 +45,36 @@ async.series({
     });
   },
 
-  findGitDir: function (next) {
-    process.stdout.write('Finding Git directory: ');
-    exec('git rev-parse --git-dir', function (err, stdout, stderr) {
+  getTarget: function (next) {
+    process.stdout.write('Getting target configuration: ');
+    exec('git config --get-all release.target', function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
 
-      gitdir = path.normalize(stdout.trim());
+      stdout.trim().split(/\r?\n/).forEach(function (target) {
+        var colon = target.lastIndexOf(':');
+        config.targets.push({
+          'file': target.slice(0, colon),
+          'line': target.slice(colon + 1)
+        });
+      });
 
-      console.log(gitdir);
+      console.log('done.');
       next();
     });
   },
 
-  getTargetFiles: function (next) {
-    process.stdout.write('Getting target files: ');
-    var gitconfig = fs.readFileSync(path.join(gitdir, 'config'), 'utf-8').split(/\r?\n/);
-    var release = false;
-    var targets = [];
-
-    gitconfig.forEach(function (line) {
-      if (release && line.indexOf('[') === 0) {
-        release = false;
-      }
-
-      if (line.indexOf('[release]') === 0) {
-        release = true;
-      }
-
-      if (!release) {
-        return;
-      }
-
-      line = line.trim();
-
-      if (line.indexOf('target') === 0) {
-        targets.push(line.replace(/^target = /, ''));
-
-        return;
-      }
-
-      if (line.indexOf('push') === 0 && !/\bfalse$/.test(line)) {
+  getPush: function (next) {
+    process.stdout.write('Getting push configuration: ');
+    exec('git config --get release.push', function (err, stdout, stderr) {
+      if (!err && stdout.trim() === 'true') {
         config.push = true;
-
-        return;
       }
+
+      console.log(config.push);
+      next();
     });
-
-    if (targets.length === 0) {
-      return next(new Error('Target file not found.'));
-    }
-
-    targets.forEach(function (target) {
-      var colon = target.lastIndexOf(':');
-      config.targets.push({
-        'file': target.slice(0, colon),
-        'line': target.slice(colon + 1)
-      });
-    });
-
-    console.log('done.');
-    next();
   },
 
   increment: function (next) {
