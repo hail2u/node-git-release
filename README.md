@@ -21,7 +21,17 @@ Git.
 USAGE
 -----
 
-    $ git release [major|minor|patch]
+    $ git release --help
+    Usage:
+      git release [options] [major|minor|patch]
+
+    Description:
+      Bump semver in multiple files, commit, tag, and push optionally.
+
+    Options:
+      -n, --dry-run  Don't process files.
+      -h, --help     Show this message.
+      -v, --version  Print version information.
 
 If something occured, command stops with stack trace.
 

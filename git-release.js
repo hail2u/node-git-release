@@ -5,12 +5,56 @@
 var async = require('async');
 var exec = require('child_process').exec;
 var fs = require('fs');
+var minimist = require('minimist');
 var path = require('path');
 var semver = require('semver');
 
+var pkg = require('./package.json');
+
 var reSemver = /\d+\.\d+\.\d+([0-9A-Za-z-])?/;
 
-var incTarget = '';
+var options = minimist(process.argv.slice(2), {
+  boolean: [
+    'dry-run',
+    'help',
+    'version'
+  ],
+  alias: {
+    'h': 'help',
+    'n': 'dry-run',
+    'v': 'version'
+  },
+  default: {
+    'dry-run': false,
+    'help': false,
+    'version': false
+  }
+});
+
+if (options.version) {
+  console.log(pkg.name + ' v' + pkg.version);
+
+  process.exit(0);
+}
+
+var incTarget = options._[0];
+
+if (options.help || !incTarget) {
+  console.log('Usage:');
+  console.log('  git release [options] [major|minor|patch]');
+  console.log('');
+  console.log('Description:');
+  console.log('  ' + pkg.description);
+  console.log('');
+  console.log('Options:');
+  console.log('  -n, --dry-run  Don\'t process files.');
+  console.log('  -h, --help     Show this message.');
+  console.log('  -v, --version  Print version information.');
+
+  process.exit(0);
+}
+
+var dryRun = options['dry-run'];
 var gitroot = '';
 var config = {
   targets: [],
@@ -21,10 +65,9 @@ var version = '';
 async.series({
   inspectIncrementTarget: function (next) {
     process.stdout.write('Inspecting increment target: ');
-    incTarget = process.argv[2];
 
-    if (!incTarget || !incTarget.match(/^(major|minor|patch)$/)) {
-      return next(new Error('Usage: git release [major|minor|patch]'));
+    if (!incTarget.match(/^(major|minor|patch)$/)) {
+      return next(new Error(incTarget + ' is not "major", "minor", or "patch".'));
     }
 
     console.log(incTarget);
@@ -45,7 +88,7 @@ async.series({
     });
   },
 
-  getTarget: function (next) {
+  getConfigTarget: function (next) {
     process.stdout.write('Getting target configuration: ');
     exec('git config --get-all release.target', function (err, stdout, stderr) {
       if (err) {
@@ -60,12 +103,12 @@ async.series({
         });
       });
 
-      console.log('done.');
+      console.log('done');
       next();
     });
   },
 
-  getPush: function (next) {
+  getConfigPush: function (next) {
     process.stdout.write('Getting push configuration: ');
     exec('git config --get release.push', function (err, stdout, stderr) {
       if (!err && stdout.trim() === 'true') {
@@ -94,37 +137,58 @@ async.series({
       process.stdout.write('Incrementing version in "' + file + ':' + line +'": ');
       line = line - 1;
       var data = fs.readFileSync(file, 'utf8').split(/\n/);
-      data[line] = data[line].replace(reSemver, function (match) {
-        version = semver.inc(match, incTarget);
+      data[line] = data[line].replace(reSemver, function (old) {
+        version = semver.inc(old, incTarget);
 
         return version;
       });
+
+      if (dryRun) {
+        console.log('done (dry-run)');
+
+        return;
+      }
+
       fs.writeFileSync(file, data.join('\n'));
-      console.log('done.');
+      console.log('done');
     });
     next();
   },
 
   commit: function (next) {
     process.stdout.write('Commiting changes: ');
+
+    if (dryRun) {
+      console.log('done (dry-run)');
+
+      return next();
+    }
+
     exec('git commit -aevm "Version ' + version + '"', function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
 
-      console.log('done.');
+      console.log('done');
       next();
     });
   },
 
   tag: function (next) {
     process.stdout.write('Tagging commit: ');
+
+    if (dryRun) {
+      console.log('done (dry-run)');
+
+      return next();
+    }
+
     exec('git tag v' + version, function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
 
-      console.log('done.');
+      console.log('done');
       next();
     });
   },
@@ -135,20 +199,35 @@ async.series({
     }
 
     process.stdout.write('Pushing commit & tag: ');
+
+    if (dryRun) {
+      console.log('done (dry-run)');
+
+      return next();
+    }
+
     exec('git push --tags origin :', function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
 
-      console.log('done.');
+      console.log('done');
       next();
     });
   }
 }, function (err, result) {
   if (err) {
-    console.log('aborted.');
+    console.log('aborted');
+
     throw err;
   }
 
-  console.log('Bumped to ' + version + ', without errors.');
+  console.log('');
+  process.stdout.write('Bumped to ' + version + ', without errors');
+
+  if (dryRun) {
+    console.log(', but not processed any files.');
+  } else {
+    console.log('.');
+  }
 });
