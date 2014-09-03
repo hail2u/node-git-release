@@ -37,9 +37,7 @@ if (options.version) {
   process.exit(0);
 }
 
-var incTarget = options._[0];
-
-if (options.help || !incTarget) {
+if (options.help || options._.length !== 1) {
   console.log('Usage:');
   console.log('  git release [options] [major|minor|patch]');
   console.log('');
@@ -54,41 +52,40 @@ if (options.help || !incTarget) {
   process.exit(0);
 }
 
-var dryRun = options['dry-run'];
-var gitroot = '';
 var config = {
+  dryRun: options['dry-run'],
+  part: options._[0],
   targets: [],
   push: false
 };
-var version = '';
 
-async.series({
-  inspectIncrementTarget: function (next) {
+async.series([
+  function (next) {
     process.stdout.write('Inspecting increment target: ');
 
-    if (!incTarget.match(/^(major|minor|patch)$/)) {
-      return next(new Error(incTarget + ' is not "major", "minor", or "patch".'));
+    if (!config.part.match(/^(major|minor|patch)$/)) {
+      return next(new Error(config.part + ' is not "major", "minor", or "patch".'));
     }
 
-    console.log(incTarget);
+    console.log(config.part);
     next();
   },
 
-  findGitRoot: function (next) {
+  function (next) {
     process.stdout.write('Finding Git root: ');
     exec('git rev-parse --show-toplevel', function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
 
-      gitroot = path.normalize(stdout.trim());
+      config.gitroot = path.normalize(stdout.trim());
 
-      console.log(gitroot);
+      console.log(config.gitroot);
       next();
     });
   },
 
-  getConfigTarget: function (next) {
+  function (next) {
     process.stdout.write('Getting target configuration: ');
     exec('git config --get-all release.target', function (err, stdout, stderr) {
       if (err) {
@@ -108,7 +105,7 @@ async.series({
     });
   },
 
-  getConfigPush: function (next) {
+  function (next) {
     process.stdout.write('Getting push configuration: ');
     exec('git config --get release.push', function (err, stdout, stderr) {
       if (!err && stdout.trim() === 'true') {
@@ -120,9 +117,9 @@ async.series({
     });
   },
 
-  increment: function (next) {
+  function (next) {
     config.targets.forEach(function (target) {
-      var file = path.join(gitroot, target.file);
+      var file = path.join(config.gitroot, target.file);
 
       if (!fs.existsSync(file)) {
         return next(new Error('File "' + file + '" not found.'));
@@ -138,12 +135,12 @@ async.series({
       line = line - 1;
       var data = fs.readFileSync(file, 'utf8').split(/\n/);
       data[line] = data[line].replace(reSemver, function (old) {
-        version = semver.inc(old, incTarget);
+        config.version = semver.inc(old, config.part);
 
-        return version;
+        return config.version;
       });
 
-      if (dryRun) {
+      if (config.dryRun) {
         console.log('done (dry-run)');
 
         return;
@@ -155,16 +152,16 @@ async.series({
     next();
   },
 
-  commit: function (next) {
+  function (next) {
     process.stdout.write('Commiting changes: ');
 
-    if (dryRun) {
+    if (config.dryRun) {
       console.log('done (dry-run)');
 
       return next();
     }
 
-    exec('git commit -aevm "Version ' + version + '"', function (err, stdout, stderr) {
+    exec('git commit -aevm "Version ' + config.version + '"', function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
@@ -174,16 +171,16 @@ async.series({
     });
   },
 
-  tag: function (next) {
+  function (next) {
     process.stdout.write('Tagging commit: ');
 
-    if (dryRun) {
+    if (config.dryRun) {
       console.log('done (dry-run)');
 
       return next();
     }
 
-    exec('git tag v' + version, function (err, stdout, stderr) {
+    exec('git tag v' + config.version, function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
@@ -193,14 +190,14 @@ async.series({
     });
   },
 
-  push: function (next) {
+  function (next) {
     if (!config.push) {
       return next();
     }
 
     process.stdout.write('Pushing commit & tag: ');
 
-    if (dryRun) {
+    if (config.dryRun) {
       console.log('done (dry-run)');
 
       return next();
@@ -215,7 +212,7 @@ async.series({
       next();
     });
   }
-}, function (err, result) {
+], function (err, result) {
   if (err) {
     console.log('aborted');
 
@@ -223,9 +220,9 @@ async.series({
   }
 
   console.log('');
-  process.stdout.write('Bumped to ' + version + ', without errors');
+  process.stdout.write('Bumped to ' + config.version + ', without errors');
 
-  if (dryRun) {
+  if (config.dryRun) {
     console.log(', but not processed any files.');
   } else {
     console.log('.');
