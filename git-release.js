@@ -131,8 +131,10 @@ async.series([
 
       stdout.trim().split(/\r?\n/).forEach(function (target) {
         var colon = target.lastIndexOf(':');
+        var file = target.slice(0, colon);
+        file = path.relative(process.cwd(), path.join(config.gitroot, file));
         config.targets.push({
-          'file': target.slice(0, colon),
+          'file': file,
           'line': target.slice(colon + 1)
         });
       });
@@ -156,13 +158,12 @@ async.series([
 
   function (next) {
     config.targets.forEach(function (target) {
-      var file = path.relative(process.cwd(), path.join(config.gitroot, target.file));
+      var file = target.file;
+      var line = target.line;
 
       if (!fs.existsSync(file)) {
         return next(new Error('File "' + file + '" not found.'));
       }
-
-      var line = target.line;
 
       if (!line.match(/^\d+$/)) {
         return next(new Error('"' + line + '" is not valid line number.'));
@@ -193,6 +194,28 @@ async.series([
   },
 
   function (next) {
+    config.targets.forEach(function (target) {
+      var file = target.file;
+      write('Staging "' + file + '": ');
+
+      if (config.dryRun) {
+        writeln('done (dry-run)');
+
+        return next();
+      }
+
+      exec('git add -- ' + file, function (err, stdout, stderr) {
+        if (err) {
+          return next(err);
+        }
+
+        writeln('done');
+      });
+      next();
+    });
+  },
+
+  function (next) {
     write('Commiting changes: ');
 
     if (config.dryRun) {
@@ -201,7 +224,7 @@ async.series([
       return next();
     }
 
-    exec('git commit -aevm "Version ' + config.version + '"', function (err, stdout, stderr) {
+    exec('git commit -evm "Version ' + config.version + '"', function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
