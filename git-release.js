@@ -11,7 +11,7 @@ var semver = require('semver');
 
 var pkg = require('./package.json');
 
-var reSemver = /\d+\.\d+\.\d+([0-9A-Za-z-])?/;
+var reSemver = /\d+\.\d+\.\d+(-[-.0-9a-zA-Z]?[.0-9a-zA-Z])?(\+[-.0-9a-zA-Z]?[-0-9a-zA-Z])?/;
 
 var options = minimist(process.argv.slice(2), {
   boolean: [
