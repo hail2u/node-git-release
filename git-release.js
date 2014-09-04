@@ -231,11 +231,13 @@ async.series([
   },
 
   function (next) {
+    write('Pushing commit & tag: ');
+
     if (!config.push) {
+      writeln('skip');
+
       return next();
     }
-
-    write('Pushing commit & tag: ');
 
     if (config.dryRun) {
       writeln('done (dry-run)');
@@ -263,8 +265,8 @@ async.series([
   process.stdout.write('Bumped to ' + config.version + ', without errors');
 
   if (config.dryRun) {
-    console.log(', but not processed any files.');
-  } else {
-    console.log('.');
+    process.stdout.write(' (dry-run)');
   }
+
+  console.log('.');
 });
