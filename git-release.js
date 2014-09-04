@@ -76,6 +76,26 @@ var writeln = function (msg) {
   }
 };
 
+var detectLineEnding = function (string) {
+  var cr = string.split('\r').length;
+  var lf = string.split('\n').length;
+  var cl = string.split('\r\n').length;
+
+  if (cr + lf === 0) {
+    return '';
+  }
+
+  if (cl === cr && cl === lf) {
+    return '\r\f';
+  }
+
+  if (cr > lf) {
+    return '\r';
+  }
+
+  return '\n';
+};
+
 async.series([
   function (next) {
     write('Inspecting increment part: ');
@@ -150,8 +170,10 @@ async.series([
 
       write('Incrementing version in "' + file + ':' + line +'": ');
       line = line - 1;
-      var data = fs.readFileSync(file, 'utf8').split(/\n/);
-      data[line] = data[line].replace(reSemver, function (old) {
+      var source = fs.readFileSync(file, 'utf8');
+      var le = detectLineEnding(source);
+      var lines = source.split(le);
+      lines[line] = lines[line].replace(reSemver, function (old) {
         config.version = semver.inc(old, config.part);
         write('bumped, ');
 
@@ -164,7 +186,7 @@ async.series([
         return;
       }
 
-      fs.writeFileSync(file, data.join('\n'));
+      fs.writeFileSync(file, lines.join(le));
       writeln('done');
     });
     next();
