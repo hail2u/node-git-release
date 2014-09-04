@@ -1,7 +1,7 @@
 {
   "name": "git-release",
   "version": "0.0.0",
-  "description": "Bump semver in multiple files, commit, tag, and push optionally.",
+  "description": "Bump semver in multiple files, stage, commit, tag, and optionally push.",
   "repository": {
     "type": "git",
     "url": "https://github.com/hail2u/node-git-release.git"

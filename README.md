@@ -1,7 +1,7 @@
 git-release
 ===========
 
-Bump semver in multiple files, commit, tag, and push optionally.
+Bump semver in multiple files, stage, commit, tag, and optionally push.
 
 
 INSTALL
@@ -39,7 +39,8 @@ If something occured, command stops with stack trace.
 OPTIONS
 -------
 
-All options are stored in Git's config file.
+All options are retrieved from Git's config file. You should configure with `git
+config` command.
 
 
 ### release.target
