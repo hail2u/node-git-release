@@ -17,16 +17,19 @@ var options = minimist(process.argv.slice(2), {
   boolean: [
     'dry-run',
     'help',
+    'verbose',
     'version'
   ],
   alias: {
     'h': 'help',
     'n': 'dry-run',
-    'v': 'version'
+    'v': 'verbose',
+    'V': 'version'
   },
   default: {
     'dry-run': false,
     'help': false,
+    'verbose': false,
     'version': false
   }
 });
@@ -46,33 +49,47 @@ if (options.help || options._.length !== 1) {
   console.log('');
   console.log('Options:');
   console.log('  -n, --dry-run  Don\'t process files.');
+  console.log('  -v, --verbose  Log verbosely.');
   console.log('  -h, --help     Show this message.');
-  console.log('  -v, --version  Print version information.');
+  console.log('  -V, --version  Print version information.');
 
-  process.exit(0);
+  process.exit(options._.length);
 }
 
 var config = {
   dryRun: options['dry-run'],
+  verbose: options.verbose,
   part: options._[0],
   targets: [],
   push: false
 };
 
+var write = function (msg) {
+  if (config.verbose) {
+    process.stdout.write(msg);
+  }
+};
+
+var writeln = function (msg) {
+  if (config.verbose) {
+    console.log(msg);
+  }
+};
+
 async.series([
   function (next) {
-    process.stdout.write('Inspecting increment target: ');
+    write('Inspecting increment target: ');
 
     if (!config.part.match(/^(major|minor|patch)$/)) {
       return next(new Error(config.part + ' is not "major", "minor", or "patch".'));
     }
 
-    console.log(config.part);
+    writeln(config.part);
     next();
   },
 
   function (next) {
-    process.stdout.write('Finding Git root: ');
+    write('Finding Git root: ');
     exec('git rev-parse --show-toplevel', function (err, stdout, stderr) {
       if (err) {
         return next(err);
@@ -80,13 +97,13 @@ async.series([
 
       config.gitroot = path.normalize(stdout.trim());
 
-      console.log(config.gitroot);
+      writeln(config.gitroot);
       next();
     });
   },
 
   function (next) {
-    process.stdout.write('Getting target configuration: ');
+    write('Getting target configuration: ');
     exec('git config --get-all release.target', function (err, stdout, stderr) {
       if (err) {
         return next(err);
@@ -100,19 +117,19 @@ async.series([
         });
       });
 
-      console.log('done');
+      writeln('done');
       next();
     });
   },
 
   function (next) {
-    process.stdout.write('Getting push configuration: ');
+    write('Getting push configuration: ');
     exec('git config --get release.push', function (err, stdout, stderr) {
       if (!err && stdout.trim() === 'true') {
         config.push = true;
       }
 
-      console.log(config.push);
+      writeln(config.push);
       next();
     });
   },
@@ -131,32 +148,33 @@ async.series([
         return next(new Error('"' + line + '" is not valid line number.'));
       }
 
-      process.stdout.write('Incrementing version in "' + file + ':' + line +'": ');
+      write('Incrementing version in "' + file + ':' + line +'": ');
       line = line - 1;
       var data = fs.readFileSync(file, 'utf8').split(/\n/);
       data[line] = data[line].replace(reSemver, function (old) {
         config.version = semver.inc(old, config.part);
+        write('bumped, ');
 
         return config.version;
       });
 
       if (config.dryRun) {
-        console.log('done (dry-run)');
+        writeln('done (dry-run)');
 
         return;
       }
 
       fs.writeFileSync(file, data.join('\n'));
-      console.log('done');
+      writeln('done');
     });
     next();
   },
 
   function (next) {
-    process.stdout.write('Commiting changes: ');
+    write('Commiting changes: ');
 
     if (config.dryRun) {
-      console.log('done (dry-run)');
+      writeln('done (dry-run)');
 
       return next();
     }
@@ -166,16 +184,16 @@ async.series([
         return next(err);
       }
 
-      console.log('done');
+      writeln('done');
       next();
     });
   },
 
   function (next) {
-    process.stdout.write('Tagging commit: ');
+    write('Tagging commit: ');
 
     if (config.dryRun) {
-      console.log('done (dry-run)');
+      writeln('done (dry-run)');
 
       return next();
     }
@@ -185,7 +203,7 @@ async.series([
         return next(err);
       }
 
-      console.log('done');
+      writeln('done');
       next();
     });
   },
@@ -195,10 +213,10 @@ async.series([
       return next();
     }
 
-    process.stdout.write('Pushing commit & tag: ');
+    write('Pushing commit & tag: ');
 
     if (config.dryRun) {
-      console.log('done (dry-run)');
+      writeln('done (dry-run)');
 
       return next();
     }
@@ -208,18 +226,18 @@ async.series([
         return next(err);
       }
 
-      console.log('done');
+      writeln('done');
       next();
     });
   }
 ], function (err, result) {
   if (err) {
-    console.log('aborted');
+    writeln('aborted');
 
     throw err;
   }
 
-  console.log('');
+  writeln('');
   process.stdout.write('Bumped to ' + config.version + ', without errors');
 
   if (config.dryRun) {
