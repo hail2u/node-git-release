@@ -268,7 +268,7 @@ async.series([
       return next();
     }
 
-    exec('git push --tags origin :', function (err, stdout, stderr) {
+    exec('git push origin HEAD v' + config.version, function (err, stdout, stderr) {
       if (err) {
         return next(err);
       }
