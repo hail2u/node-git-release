@@ -78,7 +78,7 @@ var writeln = function (msg) {
 
 async.series([
   function (next) {
-    write('Inspecting increment target: ');
+    write('Inspecting increment part: ');
 
     if (!config.part.match(/^(major|minor|patch)$/)) {
       return next(new Error(config.part + ' is not "major", "minor", or "patch".'));
