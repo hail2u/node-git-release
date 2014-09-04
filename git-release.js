@@ -156,7 +156,7 @@ async.series([
 
   function (next) {
     config.targets.forEach(function (target) {
-      var file = path.join(config.gitroot, target.file);
+      var file = path.relative(process.cwd(), path.join(config.gitroot, target.file));
 
       if (!fs.existsSync(file)) {
         return next(new Error('File "' + file + '" not found.'));
