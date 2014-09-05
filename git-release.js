@@ -132,10 +132,20 @@ async.series([
       stdout.trim().split(/\r?\n/).forEach(function (target) {
         var colon = target.lastIndexOf(':');
         var file = target.slice(0, colon);
+        var line = target.slice(colon + 1);
         file = path.relative(process.cwd(), path.join(config.gitroot, file));
+
+        if (!fs.existsSync(file)) {
+          return next(new Error('File "' + file + '" not found.'));
+        }
+
+        if (!line.match(/^\d+$/)) {
+          return next(new Error('"' + line + '" is not valid line number.'));
+        }
+
         config.targets.push({
           'file': file,
-          'line': target.slice(colon + 1)
+          'line': line
         });
       });
 
@@ -160,15 +170,6 @@ async.series([
     config.targets.forEach(function (target) {
       var file = target.file;
       var line = target.line;
-
-      if (!fs.existsSync(file)) {
-        return next(new Error('File "' + file + '" not found.'));
-      }
-
-      if (!line.match(/^\d+$/)) {
-        return next(new Error('"' + line + '" is not valid line number.'));
-      }
-
       write('Incrementing version in line ' + line + ' of "' + file + '": ');
       line = line - 1;
       var source = fs.readFileSync(file, 'utf8');
