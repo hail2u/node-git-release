@@ -169,17 +169,24 @@ async.series([
         return next(new Error('"' + line + '" is not valid line number.'));
       }
 
-      write('Incrementing version in "' + file + ':' + line +'": ');
+      write('Incrementing version in "' + file + ':' + line + '": ');
       line = line - 1;
       var source = fs.readFileSync(file, 'utf8');
       var le = detectLineEnding(source);
       var lines = source.split(le);
       lines[line] = lines[line].replace(reSemver, function (old) {
         config.version = semver.inc(old, config.part);
-        write('bumped, ');
+
+        if (config.dryRun) {
+          writeln('done (dry-run)');
+        } else {
+          writeln('done');
+        }
 
         return config.version;
       });
+
+      write('Saving "' + file + '": ');
 
       if (config.dryRun) {
         writeln('done (dry-run)');
