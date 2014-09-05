@@ -169,7 +169,7 @@ async.series([
         return next(new Error('"' + line + '" is not valid line number.'));
       }
 
-      write('Incrementing version in "' + file + ':' + line + '": ');
+      write('Incrementing version in line ' + line + ' of "' + file + '": ');
       line = line - 1;
       var source = fs.readFileSync(file, 'utf8');
       var le = detectLineEnding(source);
