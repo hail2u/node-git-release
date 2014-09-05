@@ -201,23 +201,24 @@ async.series([
   },
 
   function (next) {
+    write('Staging files: ');
+    var files = '';
     config.targets.forEach(function (target) {
-      var file = target.file;
-      write('Staging "' + file + '": ');
+      files += ' ' + target.file;
+    });
 
-      if (config.dryRun) {
-        writeln('done (dry-run)');
+    if (config.dryRun) {
+      writeln('done (dry-run)');
 
-        return next();
+      return;
+    }
+
+    exec('git add --' + files, function (err, stdout, stderr) {
+      if (err) {
+        return next(err);
       }
 
-      exec('git add -- ' + file, function (err, stdout, stderr) {
-        if (err) {
-          return next(err);
-        }
-
-        writeln('done');
-      });
+      writeln('done');
       next();
     });
   },
