@@ -2,7 +2,7 @@
   "name": "git-release",
   "description": "Bump semver in multiple files, stage, commit, tag, and optionally push.",
   "version": "0.0.0",
-  "author": "Kyo Nagashima <kyo@hail2u.net> (http://hail2u.net/)",
+  "author": "Kyo Nagashima <hail2u@gmail.com> (https://kyonagashima.com/)",
   "bin": {
     "git-release": "./git-release.js"
   },
