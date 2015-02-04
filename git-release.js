@@ -10,8 +10,6 @@ var spawn = require('child_process').spawnSync;
 
 var pkg = require('./package.json');
 
-var reSemver = /\d+\.\d+\.\d+(-[-.0-9a-zA-Z]?[.0-9a-zA-Z])?(\+[-.0-9a-zA-Z]?[-0-9a-zA-Z])?/;
-
 var config = minimist(process.argv.slice(2), {
   alias: {
     'h': 'help',
@@ -63,6 +61,7 @@ config.options = {
 };
 config.part = config._[0];
 config.push = false;
+config.re = semver.re[3];
 config.targets = [];
 
 var write = function (msg) {
@@ -194,7 +193,7 @@ config.targets.forEach(function (target) {
   var source = fs.readFileSync(file, 'utf8');
   var le = detectLineEnding(source);
   var lines = source.split(le);
-  lines[line] = lines[line].replace(reSemver, function (old) {
+  lines[line] = lines[line].replace(config.re, function (old) {
     if (!config.version) {
       config.version = semver.inc(old, config.part);
     }
