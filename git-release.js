@@ -12,7 +12,7 @@ var pkg = require('./package.json');
 
 var reSemver = /\d+\.\d+\.\d+(-[-.0-9a-zA-Z]?[.0-9a-zA-Z])?(\+[-.0-9a-zA-Z]?[-0-9a-zA-Z])?/;
 
-var options = minimist(process.argv.slice(2), {
+var config = minimist(process.argv.slice(2), {
   alias: {
     'h': 'help',
     'n': 'dry-run',
@@ -33,13 +33,13 @@ var options = minimist(process.argv.slice(2), {
   }
 });
 
-if (options.version) {
+if (config.version) {
   console.log(pkg.name + ' v' + pkg.version);
 
   process.exit(0);
 }
 
-if (options.help || options._.length !== 1) {
+if (config.help || config._.length !== 1) {
   console.log('Usage:');
   console.log('  git release [options] [major|minor|patch]');
   console.log('');
@@ -52,21 +52,18 @@ if (options.help || options._.length !== 1) {
   console.log('  -h, --help     Show this message.');
   console.log('  -V, --version  Print version information.');
 
-  process.exit(options._.length);
+  process.exit(config._.length);
 }
 
-var config = {
-  dryRun: options['dry-run'],
-  part: options._[0],
-  push: false,
-  targets: [],
-  verbose: options.verbose
-};
-var git = 'git';
-var opts = {
+config.command = 'git';
+config.dryRun = config['dry-run'];
+config.gitroot = '.git';
+config.options = {
   encoding: 'utf8'
 };
-var child = {};
+config.part = config._[0];
+config.push = false;
+config.targets = [];
 
 var write = function (msg) {
   if (config.verbose) {
@@ -120,10 +117,10 @@ var detectLineEnding = function (string) {
 // Find Git root
 (function () {
   write('Finding Git root: ');
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'rev-parse',
     '--show-toplevel'
-  ], opts);
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
@@ -136,11 +133,11 @@ var detectLineEnding = function (string) {
 // Get target configuration
 (function () {
   write('Getting target configuration: ');
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'config',
     '--get-all',
     'release.target'
-  ], opts);
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
@@ -171,11 +168,11 @@ var detectLineEnding = function (string) {
 // Get push cnfiguration
 (function () {
   write('Getting push configuration: ');
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'config',
     '--get',
     'release.push'
-  ], opts);
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
@@ -198,7 +195,9 @@ config.targets.forEach(function (target) {
   var le = detectLineEnding(source);
   var lines = source.split(le);
   lines[line] = lines[line].replace(reSemver, function (old) {
-    config.version = semver.inc(old, config.part);
+    if (!config.version) {
+      config.version = semver.inc(old, config.part);
+    }
 
     if (config.dryRun) {
       writeln('done (dry-run)');
@@ -219,11 +218,11 @@ config.targets.forEach(function (target) {
   fs.writeFileSync(file, lines.join(le));
   writeln('done');
   write('Staging ' + file + ': ');
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'add',
     '--',
-    target.file
-  ], opts);
+    file
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
@@ -242,11 +241,11 @@ config.targets.forEach(function (target) {
     return;
   }
 
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'commit',
     '-evm',
     'Version ' + config.version
-  ], opts);
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
@@ -269,10 +268,10 @@ config.targets.forEach(function (target) {
     return;
   }
 
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'tag',
     'v' + config.version
-  ], opts);
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
@@ -301,11 +300,11 @@ config.targets.forEach(function (target) {
     return;
   }
 
-  child = spawn(git, [
+  var child = spawn(config.command, [
     'push',
     'origin',
     'HEAD v' + config.version
-  ], opts);
+  ], config.options);
 
   if (child.error) {
     return next(child.error);
