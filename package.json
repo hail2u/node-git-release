@@ -10,7 +10,6 @@
     "url": "https://github.com/hail2u/node-git-release/issues"
   },
   "dependencies": {
-    "async": "^0.9.0",
     "minimist": "^1.1.0",
     "semver": "^3.0.1"
   },

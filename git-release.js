@@ -2,12 +2,11 @@
 
 'use strict';
 
-var async = require('async');
-var exec = require('child_process').exec;
 var fs = require('fs');
 var minimist = require('minimist');
 var path = require('path');
 var semver = require('semver');
+var spawn = require('child_process').spawnSync;
 
 var pkg = require('./package.json');
 
@@ -63,6 +62,11 @@ var config = {
   targets: [],
   push: false
 };
+var git = 'git';
+var opts = {
+  encoding: 'utf8'
+};
+var child = {};
 
 var write = function (msg) {
   if (config.verbose) {
@@ -74,6 +78,12 @@ var writeln = function (msg) {
   if (config.verbose) {
     console.log(msg);
   }
+};
+
+var next = function (err) {
+  writeln('aborted');
+
+  throw err;
 };
 
 var detectLineEnding = function (string) {
@@ -96,209 +106,223 @@ var detectLineEnding = function (string) {
   return '\n';
 };
 
-async.series([
-  function (next) {
-    write('Inspecting increment part: ');
+// Inspect
+(function () {
+  write('Inspecting increment part: ');
 
-    if (!config.part.match(/^(major|minor|patch)$/)) {
-      return next(new Error(config.part + ' is not "major", "minor", or "patch".'));
-    }
-
-    writeln(config.part);
-    next();
-  },
-
-  function (next) {
-    write('Finding Git root: ');
-    exec('git rev-parse --show-toplevel', function (err, stdout, stderr) {
-      if (err) {
-        return next(err);
-      }
-
-      config.gitroot = path.normalize(stdout.trim());
-
-      writeln(config.gitroot);
-      next();
-    });
-  },
-
-  function (next) {
-    write('Getting target configuration: ');
-    exec('git config --get-all release.target', function (err, stdout, stderr) {
-      if (err) {
-        return next(err);
-      }
-
-      stdout.trim().split(/\r?\n/).forEach(function (target) {
-        var colon = target.lastIndexOf(':');
-        var file = target.slice(0, colon);
-        var line = target.slice(colon + 1);
-        file = path.relative(process.cwd(), path.join(config.gitroot, file));
-
-        if (!fs.existsSync(file)) {
-          return next(new Error('File "' + file + '" not found.'));
-        }
-
-        if (!line.match(/^\d+$/)) {
-          return next(new Error('"' + line + '" is not valid line number.'));
-        }
-
-        config.targets.push({
-          'file': file,
-          'line': line
-        });
-      });
-
-      writeln('done');
-      next();
-    });
-  },
-
-  function (next) {
-    write('Getting push configuration: ');
-    exec('git config --get release.push', function (err, stdout, stderr) {
-      if (!err && stdout.trim() === 'true') {
-        config.push = true;
-      }
-
-      writeln(config.push);
-      next();
-    });
-  },
-
-  function (next) {
-    config.targets.forEach(function (target) {
-      var file = target.file;
-      var line = target.line;
-      write('Incrementing version in line ' + line + ' of "' + file + '": ');
-      line = line - 1;
-      var source = fs.readFileSync(file, 'utf8');
-      var le = detectLineEnding(source);
-      var lines = source.split(le);
-      lines[line] = lines[line].replace(reSemver, function (old) {
-        config.version = semver.inc(old, config.part);
-
-        if (config.dryRun) {
-          writeln('done (dry-run)');
-        } else {
-          writeln('done');
-        }
-
-        return config.version;
-      });
-
-      write('Saving "' + file + '": ');
-
-      if (config.dryRun) {
-        writeln('done (dry-run)');
-
-        return;
-      }
-
-      fs.writeFileSync(file, lines.join(le));
-      writeln('done');
-    });
-    next();
-  },
-
-  function (next) {
-    write('Staging files: ');
-    var files = '';
-    config.targets.forEach(function (target) {
-      files += ' ' + target.file;
-    });
-
-    if (config.dryRun) {
-      writeln('done (dry-run)');
-
-      return;
-    }
-
-    exec('git add --' + files, function (err, stdout, stderr) {
-      if (err) {
-        return next(err);
-      }
-
-      writeln('done');
-      next();
-    });
-  },
-
-  function (next) {
-    write('Commiting changes: ');
-
-    if (config.dryRun) {
-      writeln('done (dry-run)');
-
-      return next();
-    }
-
-    exec('git commit -evm "Version ' + config.version + '"', function (err, stdout, stderr) {
-      if (err) {
-        return next(err);
-      }
-
-      writeln('done');
-      next();
-    });
-  },
-
-  function (next) {
-    write('Tagging commit: ');
-
-    if (config.dryRun) {
-      writeln('done (dry-run)');
-
-      return next();
-    }
-
-    exec('git tag v' + config.version, function (err, stdout, stderr) {
-      if (err) {
-        return next(err);
-      }
-
-      writeln('done');
-      next();
-    });
-  },
-
-  function (next) {
-    write('Pushing commit & tag: ');
-
-    if (!config.push) {
-      writeln('skip');
-
-      return next();
-    }
-
-    if (config.dryRun) {
-      writeln('done (dry-run)');
-
-      return next();
-    }
-
-    exec('git push origin HEAD v' + config.version, function (err, stdout, stderr) {
-      if (err) {
-        return next(err);
-      }
-
-      writeln('done');
-      next();
-    });
-  }
-], function (err, result) {
-  if (err) {
-    writeln('aborted');
-
-    throw err;
+  if (!config.part.match(/^(major|minor|patch)$/)) {
+    return next(new Error(config.part + ' is not "major", "minor", or "patch".'));
   }
 
-  writeln('');
-  process.stdout.write('Bumped to ' + config.version + ', without errors');
+  writeln(config.part);
+})();
+
+// Find Git root
+(function () {
+  write('Finding Git root: ');
+  child = spawn(git, [
+    'rev-parse',
+    '--show-toplevel'
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  config.gitroot = path.normalize(child.stdout.trim());
+  writeln(config.gitroot);
+})();
+
+// Get target configuration
+(function () {
+  write('Getting target configuration: ');
+  child = spawn(git, [
+    'config',
+    '--get-all',
+    'release.target'
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  child.stdout.trim().split(/\r?\n/).forEach(function (target) {
+    var colon = target.lastIndexOf(':');
+    var file = target.slice(0, colon);
+    var line = target.slice(colon + 1);
+    file = path.relative(process.cwd(), path.join(config.gitroot, file));
+
+    if (!fs.existsSync(file)) {
+      return next(new Error('File "' + file + '" not found.'));
+    }
+
+    if (!line.match(/^\d+$/)) {
+      return next(new Error('"' + line + '" is not valid line number.'));
+    }
+
+    config.targets.push({
+      'file': file,
+      'line': line
+    });
+  });
+  writeln('done');
+})();
+
+// Get push cnfiguration
+(function () {
+  write('Getting push configuration: ');
+  child = spawn(git, [
+    'config',
+    '--get',
+    'release.push'
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  if (child.stdout.trim() === 'true') {
+    config.push = true;
+  }
+
+  writeln(config.push);
+})();
+
+// Increment, save, and stage
+config.targets.forEach(function (target) {
+  var file = target.file;
+  var line = target.line;
+  write('Incrementing version in line ' + line + ' of "' + file + '": ');
+  line = line - 1;
+  var source = fs.readFileSync(file, 'utf8');
+  var le = detectLineEnding(source);
+  var lines = source.split(le);
+  lines[line] = lines[line].replace(reSemver, function (old) {
+    config.version = semver.inc(old, config.part);
+
+    if (config.dryRun) {
+      writeln('done (dry-run)');
+    } else {
+      writeln('done');
+    }
+
+    return config.version;
+  });
+  write('Saving "' + file + '": ');
 
   if (config.dryRun) {
-    process.stdout.write(' (dry-run)');
+    writeln('done (dry-run)');
+
+    return;
   }
 
-  console.log('.');
+  fs.writeFileSync(file, lines.join(le));
+  writeln('done');
+  write('Staging ' + file + ': ');
+  child = spawn(git, [
+    'add',
+    '--',
+    target.file
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  writeln('done');
 });
+
+// Commit
+(function () {
+  write('Commiting changes: ');
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  child = spawn(git, [
+    'commit',
+    '-evm',
+    'Version ' + config.version
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  if (child.status && child.stderr) {
+    return next(new Error(child.stderr));
+  }
+
+  writeln('done');
+})();
+
+// Tag
+(function () {
+  write('Tagging commit: ');
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  child = spawn(git, [
+    'tag',
+    'v' + config.version
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  if (child.status && child.stderr) {
+    return next(new Error(child.stderr));
+  }
+
+  writeln('done');
+})();
+
+// Push
+(function () {
+  write('Pushing commit & tag: ');
+
+  if (!config.push) {
+    writeln('skip');
+
+    return;
+  }
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  child = spawn(git, [
+    'push',
+    'origin',
+    'HEAD v' + config.version
+  ], opts);
+
+  if (child.error) {
+    return next(child.error);
+  }
+
+  if (child.status && child.stderr) {
+    return next(new Error(child.stderr));
+  }
+
+  writeln('done');
+})();
+
+writeln('');
+process.stdout.write('Bumped to ' + config.version + ', without errors');
+
+if (config.dryRun) {
+  process.stdout.write(' (dry-run)');
+}
+
+console.log('.');
