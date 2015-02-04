@@ -13,18 +13,18 @@ var pkg = require('./package.json');
 var reSemver = /\d+\.\d+\.\d+(-[-.0-9a-zA-Z]?[.0-9a-zA-Z])?(\+[-.0-9a-zA-Z]?[-0-9a-zA-Z])?/;
 
 var options = minimist(process.argv.slice(2), {
-  boolean: [
-    'dry-run',
-    'help',
-    'verbose',
-    'version'
-  ],
   alias: {
     'h': 'help',
     'n': 'dry-run',
     'v': 'verbose',
     'V': 'version'
   },
+  boolean: [
+    'dry-run',
+    'help',
+    'verbose',
+    'version'
+  ],
   default: {
     'dry-run': false,
     'help': false,
@@ -57,10 +57,10 @@ if (options.help || options._.length !== 1) {
 
 var config = {
   dryRun: options['dry-run'],
-  verbose: options.verbose,
   part: options._[0],
+  push: false,
   targets: [],
-  push: false
+  verbose: options.verbose
 };
 var git = 'git';
 var opts = {
