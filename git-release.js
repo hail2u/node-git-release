@@ -302,7 +302,8 @@ config.targets.forEach(function (target) {
   var child = spawn(config.command, [
     'push',
     'origin',
-    'HEAD v' + config.version
+    'HEAD',
+    'v' + config.version
   ], config.options);
 
   if (child.error) {
