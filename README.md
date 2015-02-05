@@ -7,7 +7,7 @@ Bump semver in multiple files, stage, commit, tag, and optionally push.
 INSTALL
 -------
 
-    $ npm install -g git-release
+    $ npm install -g hail2u/node-git-release
 
 Not published yet.
 
@@ -21,7 +21,7 @@ Git.
 USAGE
 -----
 
-    $ git release --help
+    $ git release -h
     Usage:
       git release [options] [major|minor|patch]
 
