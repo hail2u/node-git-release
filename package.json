@@ -14,7 +14,7 @@
     "semver": "^3.0.1"
   },
   "engines": {
-    "iojs": ">1.1.0"
+    "iojs": ">=1.1.0"
   },
   "homepage": "https://github.com/hail2u/node-git-release",
   "keywords": [
