@@ -82,8 +82,216 @@ var showHelp = function () {
   console.log('  -v, --verbose  Log verbosely.');
   console.log('  -h, --help     Show this message.');
   console.log('  -V, --version  Print version information.');
+};
 
-  return;
+// Inspect
+var inspect = function () {
+  write('Inspecting increment part: ');
+
+  if (!config.part.match(/^(major|minor|patch)$/)) {
+    abort(new Error(config.part + ' is not "major", "minor", or "patch".'));
+  }
+
+  writeln(config.part);
+};
+
+// Find Git root
+var findGitRoot = function () {
+  write('Finding Git root: ');
+  var child = spawn(config.command, [
+    'rev-parse',
+    '--show-toplevel'
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  config.gitroot = path.normalize(child.stdout.trim());
+  writeln(config.gitroot);
+};
+
+// Get target configuration
+var getConfigTarget = function () {
+  write('Getting target configuration: ');
+  var child = spawn(config.command, [
+    'config',
+    '--get-all',
+    'release.target'
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  child.stdout.trim().split(/\r?\n/).forEach(function (target) {
+    var colon = target.lastIndexOf(':');
+    var file = target.slice(0, colon);
+    var line = target.slice(colon + 1);
+    file = path.relative(process.cwd(), path.join(config.gitroot, file));
+
+    if (!fs.existsSync(file)) {
+      abort(new Error('File "' + file + '" not found.'));
+    }
+
+    if (!line.match(/^\d+$/)) {
+      abort(new Error('"' + line + '" is not valid line number.'));
+    }
+
+    config.targets.push({
+      'file': file,
+      'line': line
+    });
+  });
+  writeln('done');
+};
+
+// Get push cnfiguration
+var getConfigPush = function () {
+  write('Getting push configuration: ');
+  var child = spawn(config.command, [
+    'config',
+    '--get',
+    'release.push'
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  if (child.stdout.trim() === 'true') {
+    config.push = true;
+  }
+
+  writeln(config.push);
+};
+
+// Increment
+var increment = function (f, l) {
+  write('Incrementing version in line ' + l + ' of "' + f + '": ');
+  l = l - 1;
+  var source = fs.readFileSync(f, 'utf8');
+  var le = detectLineEnding(source);
+  var lines = source.split(le);
+  lines[l] = lines[l].replace(config.re, function (old) {
+    if (!config.version) {
+      config.version = semver.inc(old, config.part);
+    }
+
+    return config.version;
+  });
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  fs.writeFileSync(f, lines.join(le));
+  writeln('done');
+};
+
+// Stage
+var stage = function (f) {
+  write('Staging ' + f + ': ');
+  var child = spawn(config.command, [
+    'add',
+    '--',
+    f
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  writeln('done');
+};
+
+// Commit
+var commit = function () {
+  write('Commiting changes: ');
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  var child = spawn(config.command, [
+    'commit',
+    '-evm',
+    'Version ' + config.version
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  if (child.status && child.stderr) {
+    abort(new Error(child.stderr));
+  }
+
+  writeln('done');
+};
+
+// Tag
+var tag = function () {
+  write('Tagging commit: ');
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  var child = spawn(config.command, [
+    'tag',
+    'v' + config.version
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  if (child.status && child.stderr) {
+    abort(new Error(child.stderr));
+  }
+
+  writeln('done');
+};
+
+// Push
+var push = function () {
+  write('Pushing commit & tag: ');
+
+  if (!config.push) {
+    writeln('skip');
+
+    return;
+  }
+
+  if (config.dryRun) {
+    writeln('done (dry-run)');
+
+    return;
+  }
+
+  var child = spawn(config.command, [
+    'push',
+    'origin',
+    'HEAD',
+    'v' + config.version
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  if (child.status && child.stderr) {
+    abort(new Error(child.stderr));
+  }
+
+  writeln('done');
 };
 
 if (config._.length !== 1) {
@@ -112,222 +320,19 @@ switch (true) {
     config.push = false;
     config.re = semver.re[3];
     config.targets = [];
-
-    // Inspect
-    (function () {
-      write('Inspecting increment part: ');
-
-      if (!config.part.match(/^(major|minor|patch)$/)) {
-        abort(new Error(config.part + ' is not "major", "minor", or "patch".'));
-      }
-
-      writeln(config.part);
-    })();
-
-    // Find Git root
-    (function () {
-      write('Finding Git root: ');
-      var child = spawn(config.command, [
-        'rev-parse',
-        '--show-toplevel'
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      config.gitroot = path.normalize(child.stdout.trim());
-      writeln(config.gitroot);
-    })();
-
-    // Get target configuration
-    (function () {
-      write('Getting target configuration: ');
-      var child = spawn(config.command, [
-        'config',
-        '--get-all',
-        'release.target'
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      child.stdout.trim().split(/\r?\n/).forEach(function (target) {
-        var colon = target.lastIndexOf(':');
-        var file = target.slice(0, colon);
-        var line = target.slice(colon + 1);
-        file = path.relative(process.cwd(), path.join(config.gitroot, file));
-
-        if (!fs.existsSync(file)) {
-          abort(new Error('File "' + file + '" not found.'));
-        }
-
-        if (!line.match(/^\d+$/)) {
-          abort(new Error('"' + line + '" is not valid line number.'));
-        }
-
-        config.targets.push({
-          'file': file,
-          'line': line
-        });
-      });
-      writeln('done');
-    })();
-
-    // Get push cnfiguration
-    (function () {
-      write('Getting push configuration: ');
-      var child = spawn(config.command, [
-        'config',
-        '--get',
-        'release.push'
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      if (child.stdout.trim() === 'true') {
-        config.push = true;
-      }
-
-      writeln(config.push);
-    })();
-
-    // Increment, save, and stage
+    inspect();
+    findGitRoot();
+    getConfigTarget();
+    getConfigPush();
     config.targets.forEach(function (target) {
       var file = target.file;
       var line = target.line;
-      write('Incrementing version in line ' + line + ' of "' + file + '": ');
-      line = line - 1;
-      var source = fs.readFileSync(file, 'utf8');
-      var le = detectLineEnding(source);
-      var lines = source.split(le);
-      lines[line] = lines[line].replace(config.re, function (old) {
-        if (!config.version) {
-          config.version = semver.inc(old, config.part);
-        }
-
-        if (config.dryRun) {
-          writeln('done (dry-run)');
-        } else {
-          writeln('done');
-        }
-
-        return config.version;
-      });
-      write('Saving "' + file + '": ');
-
-      if (config.dryRun) {
-        writeln('done (dry-run)');
-
-        return;
-      }
-
-      fs.writeFileSync(file, lines.join(le));
-      writeln('done');
-      write('Staging ' + file + ': ');
-      var child = spawn(config.command, [
-        'add',
-        '--',
-        file
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      writeln('done');
+      increment(file, line);
+      stage(file);
     });
-
-    // Commit
-    (function () {
-      write('Commiting changes: ');
-
-      if (config.dryRun) {
-        writeln('done (dry-run)');
-
-        return;
-      }
-
-      var child = spawn(config.command, [
-        'commit',
-        '-evm',
-        'Version ' + config.version
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      if (child.status && child.stderr) {
-        abort(new Error(child.stderr));
-      }
-
-      writeln('done');
-    })();
-
-    // Tag
-    (function () {
-      write('Tagging commit: ');
-
-      if (config.dryRun) {
-        writeln('done (dry-run)');
-
-        return;
-      }
-
-      var child = spawn(config.command, [
-        'tag',
-        'v' + config.version
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      if (child.status && child.stderr) {
-        abort(new Error(child.stderr));
-      }
-
-      writeln('done');
-    })();
-
-    // Push
-    (function () {
-      write('Pushing commit & tag: ');
-
-      if (!config.push) {
-        writeln('skip');
-
-        return;
-      }
-
-      if (config.dryRun) {
-        writeln('done (dry-run)');
-
-        return;
-      }
-
-      var child = spawn(config.command, [
-        'push',
-        'origin',
-        'HEAD',
-        'v' + config.version
-      ], config.options);
-
-      if (child.error) {
-        abort(child.error);
-      }
-
-      if (child.status && child.stderr) {
-        abort(new Error(child.stderr));
-      }
-
-      writeln('done');
-    })();
-
+    commit();
+    tag();
+    push();
     writeln('');
     process.stdout.write('Bumped to ' + config.version + ', without errors');
 
