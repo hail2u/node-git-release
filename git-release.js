@@ -11,10 +11,10 @@ var spawn = require('child_process').spawnSync;
 
 var config = minimist(process.argv.slice(2), {
   alias: {
+    'V': 'version',
     'h': 'help',
     'n': 'dry-run',
-    'v': 'verbose',
-    'V': 'version'
+    'v': 'verbose'
   },
   boolean: [
     'dry-run',
