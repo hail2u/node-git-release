@@ -51,9 +51,9 @@ var abort = function (err) {
 };
 
 var detectLineEnding = function (string) {
+  var cl = string.split('\r\n').length;
   var cr = string.split('\r').length;
   var lf = string.split('\n').length;
-  var cl = string.split('\r\n').length;
 
   if (cr + lf === 0) {
     return '';
@@ -97,8 +97,9 @@ var inspect = function () {
 
 // Find Git root
 var findGitRoot = function () {
+  var child;
   write('Finding Git root: ');
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'rev-parse',
     '--show-toplevel'
   ], config.options);
@@ -113,8 +114,9 @@ var findGitRoot = function () {
 
 // Get target configuration
 var getConfigTarget = function () {
+  var child;
   write('Getting target configuration: ');
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'config',
     '--get-all',
     'release.target'
@@ -148,8 +150,9 @@ var getConfigTarget = function () {
 
 // Get push cnfiguration
 var getConfigPush = function () {
+  var child;
   write('Getting push configuration: ');
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'config',
     '--get',
     'release.push'
@@ -168,11 +171,14 @@ var getConfigPush = function () {
 
 // Increment
 var increment = function (f, l) {
+  var le;
+  var lines;
+  var source;
   write('Incrementing version in line ' + l + ' of "' + f + '": ');
   l = l - 1;
-  var source = fs.readFileSync(f, 'utf8');
-  var le = detectLineEnding(source);
-  var lines = source.split(le);
+  source = fs.readFileSync(f, 'utf8');
+  le = detectLineEnding(source);
+  lines = source.split(le);
   lines[l] = lines[l].replace(config.re, function (old) {
     if (!config.version) {
       config.version = semver.inc(old, config.part);
@@ -193,8 +199,9 @@ var increment = function (f, l) {
 
 // Stage
 var stage = function (f) {
+  var child;
   write('Staging ' + f + ': ');
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'add',
     '--',
     f
@@ -209,6 +216,7 @@ var stage = function (f) {
 
 // Commit
 var commit = function () {
+  var child;
   write('Commiting changes: ');
 
   if (config.dryRun) {
@@ -217,7 +225,7 @@ var commit = function () {
     return;
   }
 
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'commit',
     '-evm',
     'Version ' + config.version
@@ -236,6 +244,7 @@ var commit = function () {
 
 // Tag
 var tag = function () {
+  var child;
   write('Tagging commit: ');
 
   if (config.dryRun) {
@@ -244,7 +253,7 @@ var tag = function () {
     return;
   }
 
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'tag',
     'v' + config.version
   ], config.options);
@@ -262,6 +271,7 @@ var tag = function () {
 
 // Push
 var push = function () {
+  var child;
   write('Pushing commit & tag: ');
 
   if (!config.push) {
@@ -276,7 +286,7 @@ var push = function () {
     return;
   }
 
-  var child = spawn(config.command, [
+  child = spawn(config.command, [
     'push',
     'origin',
     'HEAD',
