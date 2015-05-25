@@ -22,10 +22,7 @@
     "semver",
     "release"
   ],
-  "license": {
-    "type": "MIT",
-    "url": "http://hail2u.mit-license.org/2014"
-  },
+  "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
