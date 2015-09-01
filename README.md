@@ -37,7 +37,7 @@ If something occured, command stops with stack trace.
 OPTIONS
 -------
 
-All options are retrieved from Git's config file. You should configure with `git
+All options are retrieved from Git’s config file. You should configure with `git
 config` command.
 
 
