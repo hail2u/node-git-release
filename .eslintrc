@@ -1,5 +1,11 @@
 {
+  "extends": "eslint:recommended",
   "env": {
     "node": true
+  },
+  "rules": {
+    "indent": [1, 2],
+    "no-console": 0,
+    "quotes": [1, "double", "avoid-escape"]
   }
 }
