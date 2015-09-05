@@ -306,7 +306,8 @@ var push = function () {
 };
 
 if (config._.length !== 1) {
-  config.help = true;
+  showHelp();
+  process.exit(1);
 }
 
 switch (true) {
