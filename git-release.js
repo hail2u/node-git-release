@@ -305,7 +305,7 @@ var push = function () {
   writeln("done");
 };
 
-if (config._.length !== 1) {
+if (!config.help && !config.version && config._.length !== 1) {
   showHelp();
   process.exit(1);
 }
