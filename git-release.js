@@ -71,8 +71,9 @@ var detectLineEnding = function (string) {
 };
 
 var showHelp = function () {
+  pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
   console.log("Usage:");
-  console.log("  git release [options] [major|minor|patch]");
+  console.log("  " + pkg.name + " [options] [major|minor|patch]");
   console.log("");
   console.log("Description:");
   console.log("  " + pkg.description);
@@ -310,7 +311,7 @@ if (config._.length !== 1) {
 
 switch (true) {
 case config.version:
-  console.log("csswring v" + pkg.version);
+  console.log(pkg.name + " v" + pkg.version);
 
   break;
 
