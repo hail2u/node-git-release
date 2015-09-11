@@ -73,7 +73,7 @@ var detectLineEnding = function (string) {
 var showHelp = function () {
   pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
   console.log("Usage:");
-  console.log("  " + pkg.name + " [options] [major|minor|patch]");
+  console.log("  " + pkg.name + " [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]");
   console.log("");
   console.log("Description:");
   console.log("  " + pkg.description);
@@ -89,8 +89,8 @@ var showHelp = function () {
 var inspect = function () {
   write("Inspecting increment part: ");
 
-  if (!config.part.match(/^(major|minor|patch)$/)) {
-    abort(new Error(config.part + ' is not "major", "minor", or "patch".'));
+  if (!config.part.match(/^((pre)?(major|minor|patch)|prerelease)$/)) {
+    abort(new Error(config.part + ' is not "(pre)major", "(pre)minor", "(pre)patch", or "prerelease".'));
   }
 
   writeln(config.part);
