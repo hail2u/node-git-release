@@ -21,17 +21,18 @@ USAGE
 
     $ git release -h
     Usage:
-      git release [options] [major|minor|patch]
+      git release [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]
 
     Description:
-      Bump semver in multiple files, commit, tag, and push optionally.
+      Bump semver in multiple files, stage, commit, tag, and optionally push.
 
     Options:
-      -n, --dry-run  Don't process files.
+      -n, --dry-run  Don"t process files.
+      -v, --verbose  Log verbosely.
       -h, --help     Show this message.
-      -v, --version  Print version information.
+      -V, --version  Print version information.
 
-If something occured, command stops with stack trace.
+    If something occured, command stops with stack trace.
 
 
 OPTIONS
