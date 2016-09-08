@@ -1,7 +1,7 @@
 git-release
 ===========
 
-Bump semver in multiple files, stage, commit, tag, and optionally push.
+Bump semver in multiple files, stage, commit, tag, and optionally push to GitHub
 
 
 INSTALL
