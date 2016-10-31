@@ -79,7 +79,7 @@ var showHelp = function () {
   console.log("  " + pkg.description);
   console.log("");
   console.log("Options:");
-  console.log("  -n, --dry-run  Don\"t process files.");
+  console.log("  -n, --dry-run  Don’t process files.");
   console.log("  -v, --verbose  Log verbosely.");
   console.log("  -h, --help     Show this message.");
   console.log("  -V, --version  Print version information.");
