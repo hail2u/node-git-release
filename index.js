@@ -260,7 +260,7 @@ function commit() {
   const child = spawn(config.gitcommand, [
     "commit",
     "--edit",
-    `--message="Version ${config.version}"`,
+    `--message=Version ${config.version}`,
     "--verbose"
   ], config.options);
 
