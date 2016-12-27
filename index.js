@@ -352,10 +352,11 @@ case config.help:
   break;
 
 default:
-  config.gitcommand = which("git");
-  config.npmcommand = which("npm");
   config.dryRun = config["dry-run"];
+  config.gitcommand = which("git");
   config.gitroot = ".git";
+  config.npmcommand = which("npm");
+  config.npmroot = "";
   config.options = {
     encoding: "utf8"
   };
