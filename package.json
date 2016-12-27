@@ -4,7 +4,7 @@
   "version": "1.1.6",
   "author": "Kyo Nagashima <hail2u@gmail.com> (https://kyonagashima.com/)",
   "bin": {
-    "git-release": "./git-release.js"
+    "git-release": "./index.js"
   },
   "bugs": {
     "url": "https://github.com/hail2u/node-git-release/issues"
