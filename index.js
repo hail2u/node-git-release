@@ -2,14 +2,14 @@
 
 "use strict";
 
-var fs = require("fs");
-var minimist = require("minimist");
-var path = require("path");
-var pkg = require("./package.json");
-var semver = require("semver");
-var spawn = require("child_process").spawnSync;
+const fs = require("fs");
+const minimist = require("minimist");
+const path = require("path");
+const pkg = require("./package.json");
+const semver = require("semver");
+const spawn = require("child_process").spawnSync;
 
-var config = minimist(process.argv.slice(2), {
+const config = minimist(process.argv.slice(2), {
   alias: {
     "V": "version",
     "h": "help",
@@ -30,30 +30,30 @@ var config = minimist(process.argv.slice(2), {
   }
 });
 
-var write = function (msg) {
+function write(msg) {
   if (config.verbose) {
     process.stdout.write(msg);
   }
-};
+}
 
-var writeln = function (msg) {
+function writeln(msg) {
   if (config.verbose) {
     console.log(msg);
   }
-};
+}
 
-var abort = function (err) {
+function abort(err) {
   if (err) {
     writeln("aborted");
 
     throw err;
   }
-};
+}
 
-var detectLineEnding = function (string) {
-  var cl = string.split("\r\n").length;
-  var cr = string.split("\r").length;
-  var lf = string.split("\n").length;
+function detectLineEnding(string) {
+  const cl = string.split("\r\n").length;
+  const cr = string.split("\r").length;
+  const lf = string.split("\n").length;
 
   if (cr + lf === 0) {
     return "";
@@ -68,39 +68,38 @@ var detectLineEnding = function (string) {
   }
 
   return "\n";
-};
+}
 
-var showHelp = function () {
+function showHelp() {
   pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
-  console.log("Usage:");
-  console.log("  " + pkg.name + " [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]");
-  console.log("");
-  console.log("Description:");
-  console.log("  " + pkg.description);
-  console.log("");
-  console.log("Options:");
-  console.log("  -n, --dry-run  Don’t process files.");
-  console.log("  -v, --verbose  Log verbosely.");
-  console.log("  -h, --help     Show this message.");
-  console.log("  -V, --version  Print version information.");
-};
+  console.log(`Usage:
+  ${pkg.name} [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]
+
+Description:
+  ${pkg.description}
+
+Options:
+  -n, --dry-run  Don’t process files.
+  -v, --verbose  Log verbosely.
+  -h, --help     Show this message.
+  -V, --version  Print version information.`);
+}
 
 // Inspect
-var inspect = function () {
+function inspect() {
   write("Inspecting increment part: ");
 
   if (!config.part.match(/^((pre)?(major|minor|patch)|prerelease)$/)) {
-    abort(new Error(config.part + ' is not "(pre)major", "(pre)minor", "(pre)patch", or "prerelease".'));
+    abort(new Error(`${config.part} is not "(pre)major", "(pre)minor", "(pre)patch", or "prerelease".`));
   }
 
   writeln(config.part);
-};
+}
 
 // Find Git root
-var findGitRoot = function () {
-  var child;
+function findGitRoot() {
   write("Finding Git root: ");
-  child = spawn(config.command, [
+  const child = spawn(config.command, [
     "rev-parse",
     "--show-toplevel"
   ], config.options);
@@ -111,13 +110,12 @@ var findGitRoot = function () {
 
   config.gitroot = path.normalize(child.stdout.trim());
   writeln(config.gitroot);
-};
+}
 
 // Get target configuration
-var getConfigTarget = function () {
-  var child;
+function getConfigTarget() {
   write("Getting target configuration: ");
-  child = spawn(config.command, [
+  const child = spawn(config.command, [
     "config",
     "--get-all",
     "release.target"
@@ -127,33 +125,36 @@ var getConfigTarget = function () {
     abort(child.error);
   }
 
-  child.stdout.trim().split(/\r?\n/).forEach(function (target) {
-    var colon = target.lastIndexOf(":");
-    var file = target.slice(0, colon);
-    var line = target.slice(colon + 1);
-    file = path.relative(process.cwd(), path.join(config.gitroot, file));
+  child.stdout
+    .trim()
+    .split(/\r?\n/)
+    .forEach(function (target) {
+      const colon = target.lastIndexOf(":");
+      const line = target.slice(colon + 1);
+      let file = target.slice(0, colon);
 
-    if (!fs.existsSync(file)) {
-      abort(new Error('File "' + file + '" not found.'));
-    }
+      file = path.relative(process.cwd(), path.join(config.gitroot, file));
 
-    if (!line.match(/^\d+$/)) {
-      abort(new Error('"' + line + '" is not valid line number.'));
-    }
+      if (!fs.existsSync(file)) {
+        abort(new Error(`File "${file}" not found.`));
+      }
 
-    config.targets.push({
-      "file": file,
-      "line": line
+      if (!line.match(/^\d+$/)) {
+        abort(new Error(`"${line}" is not valid line number.`));
+      }
+
+      config.targets.push({
+        "file": file,
+        "line": line
+      });
     });
-  });
   writeln("done");
-};
+}
 
 // Get push cnfiguration
-var getConfigPush = function () {
-  var child;
+function getConfigPush() {
   write("Getting push configuration: ");
-  child = spawn(config.command, [
+  const child = spawn(config.command, [
     "config",
     "--get",
     "release.push"
@@ -168,18 +169,16 @@ var getConfigPush = function () {
   }
 
   writeln(config.push);
-};
+}
 
 // Increment
-var increment = function (f, l) {
-  var le;
-  var lines;
-  var source;
-  write("Incrementing version in line " + l + ' of "' + f + '": ');
+function increment(f, l) {
+  write(`Incrementing version in line ${l} of "${f}": `);
   l = l - 1;
-  source = fs.readFileSync(f, "utf8");
-  le = detectLineEnding(source);
-  lines = source.split(le);
+  const source = fs.readFileSync(f, "utf8");
+  const le = detectLineEnding(source);
+  const lines = source.split(le);
+
   lines[l] = lines[l].replace(config.re, function (old) {
     if (!config.version) {
       config.version = semver.inc(old, config.part);
@@ -196,13 +195,12 @@ var increment = function (f, l) {
 
   fs.writeFileSync(f, lines.join(le));
   writeln("done");
-};
+}
 
 // Stage
-var stage = function (f) {
-  var child;
-  write("Staging " + f + ": ");
-  child = spawn(config.command, [
+function stage(f) {
+  write(`Staging ${f}: `);
+  const child = spawn(config.command, [
     "add",
     "--",
     f
@@ -213,11 +211,10 @@ var stage = function (f) {
   }
 
   writeln("done");
-};
+}
 
 // Commit
-var commit = function () {
-  var child;
+function commit() {
   write("Commiting changes: ");
 
   if (config.dryRun) {
@@ -226,10 +223,10 @@ var commit = function () {
     return;
   }
 
-  child = spawn(config.command, [
+  const child = spawn(config.command, [
     "commit",
     "-evm",
-    "Version " + config.version
+    `Version ${config.version}`
   ], config.options);
 
   if (child.error) {
@@ -241,11 +238,10 @@ var commit = function () {
   }
 
   writeln("done");
-};
+}
 
 // Tag
-var tag = function () {
-  var child;
+function tag() {
   write("Tagging commit: ");
 
   if (config.dryRun) {
@@ -254,9 +250,9 @@ var tag = function () {
     return;
   }
 
-  child = spawn(config.command, [
+  const child = spawn(config.command, [
     "tag",
-    "v" + config.version
+    `v${config.version}`
   ], config.options);
 
   if (child.error) {
@@ -268,11 +264,10 @@ var tag = function () {
   }
 
   writeln("done");
-};
+}
 
 // Push
-var push = function () {
-  var child;
+function push() {
   write("Pushing commit & tag: ");
 
   if (!config.push) {
@@ -287,11 +282,11 @@ var push = function () {
     return;
   }
 
-  child = spawn(config.command, [
+  const child = spawn(config.command, [
     "push",
     "origin",
     "HEAD",
-    "v" + config.version
+    `v${config.version}`
   ], config.options);
 
   if (child.error) {
@@ -303,7 +298,7 @@ var push = function () {
   }
 
   writeln("done");
-};
+}
 
 if (!config.help && !config.version && config._.length !== 1) {
   showHelp();
@@ -312,7 +307,7 @@ if (!config.help && !config.version && config._.length !== 1) {
 
 switch (true) {
 case config.version:
-  console.log(pkg.name + " v" + pkg.version);
+  console.log(`${pkg.name} v${pkg.version}`);
 
   break;
 
@@ -337,16 +332,14 @@ default:
   getConfigTarget();
   getConfigPush();
   config.targets.forEach(function (target) {
-    var file = target.file;
-    var line = target.line;
-    increment(file, line);
-    stage(file);
+    increment(target.file, target.line);
+    stage(target.file);
   });
   commit();
   tag();
   push();
   writeln("");
-  process.stdout.write("Bumped to " + config.version + ", without errors");
+  process.stdout.write(`Bumped to ${config.version}, without errors`);
 
   if (config.dryRun) {
     process.stdout.write(" (dry-run)");
