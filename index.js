@@ -225,8 +225,9 @@ function commit() {
 
   const child = spawn(config.command, [
     "commit",
-    "-evm",
-    `Version ${config.version}`
+    "--edit",
+    `--message="Version ${config.version}"`,
+    "--verbose"
   ], config.options);
 
   if (child.error) {
