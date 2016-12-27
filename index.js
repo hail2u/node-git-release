@@ -272,7 +272,7 @@ function push() {
   write("Pushing commit & tag: ");
 
   if (!config.push) {
-    writeln("skip");
+    writeln("skipped");
 
     return;
   }
