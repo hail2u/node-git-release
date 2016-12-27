@@ -8,6 +8,7 @@ const path = require("path");
 const pkg = require("./package.json");
 const semver = require("semver");
 const spawn = require("child_process").spawnSync;
+const which = require("which").sync;
 
 const config = minimist(process.argv.slice(2), {
   alias: {
@@ -96,10 +97,43 @@ function inspect() {
   writeln(config.part);
 }
 
+// Find npm root
+function findNpmRoot() {
+  write("Finding npm root: ");
+  const child = spawn(config.npmcommand, ["prefix"], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  config.npmroot = path.normalize(child.stdout.trim());
+  writeln(config.npmroot);
+}
+
+// Test
+function test() {
+  write("Running npm test: ");
+  const p = JSON.parse(fs.readFileSync(path.join(config.npmroot, "package.json")));
+
+  if (!p.scripts || !p.scripts.test) {
+    writeln("skipped");
+
+    return;
+  }
+
+  const child = spawn(config.npmcommand, ["test"], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  writeln("done");
+}
+
 // Find Git root
 function findGitRoot() {
   write("Finding Git root: ");
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "rev-parse",
     "--show-toplevel"
   ], config.options);
@@ -115,7 +149,7 @@ function findGitRoot() {
 // Get target configuration
 function getConfigTarget() {
   write("Getting target configuration: ");
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "config",
     "--get-all",
     "release.target"
@@ -154,7 +188,7 @@ function getConfigTarget() {
 // Get push cnfiguration
 function getConfigPush() {
   write("Getting push configuration: ");
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "config",
     "--get",
     "release.push"
@@ -200,7 +234,7 @@ function increment(f, l) {
 // Stage
 function stage(f) {
   write(`Staging ${f}: `);
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "add",
     "--",
     f
@@ -223,7 +257,7 @@ function commit() {
     return;
   }
 
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "commit",
     "--edit",
     `--message="Version ${config.version}"`,
@@ -251,7 +285,7 @@ function tag() {
     return;
   }
 
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "tag",
     `v${config.version}`
   ], config.options);
@@ -283,7 +317,7 @@ function push() {
     return;
   }
 
-  const child = spawn(config.command, [
+  const child = spawn(config.gitcommand, [
     "push",
     "origin",
     "HEAD",
@@ -318,7 +352,8 @@ case config.help:
   break;
 
 default:
-  config.command = "git";
+  config.gitcommand = which("git");
+  config.npmcommand = which("npm");
   config.dryRun = config["dry-run"];
   config.gitroot = ".git";
   config.options = {
@@ -329,6 +364,8 @@ default:
   config.re = semver.re[3];
   config.targets = [];
   inspect();
+  findNpmRoot();
+  test();
   findGitRoot();
   getConfigTarget();
   getConfigPush();

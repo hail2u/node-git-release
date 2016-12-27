@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "minimist": "^1.1.0",
-    "semver": "^5.1.0"
+    "semver": "^5.1.0",
+    "which": "^1.2.12"
   },
   "homepage": "https://github.com/hail2u/node-git-release",
   "keywords": [
