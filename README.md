@@ -10,12 +10,6 @@ INSTALL
     $ npm install -g @hail2u/git-release
 
 
-REQUIREMENT
------------
-
-Git.
-
-
 USAGE
 -----
 
