@@ -364,6 +364,43 @@ function push() {
   writeln("done");
 }
 
+// Publish
+function publish() {
+  write("Publishing package: ");
+
+  if (!config.npmpkg.version) {
+    writeln("skipped (not a npm package)");
+
+    return;
+  }
+
+  if (config.npmpkg.private === true) {
+    writeln("skipped (private npm package)");
+
+    return;
+  }
+
+  if (config.npmpkg.publishConfig) {
+    writeln("skipped (publishing private repository not supported)");
+
+    return;
+  }
+
+  if (config.dryRun) {
+    writeln("done (dry-run)");
+
+    return;
+  }
+
+  const child = spawn(config.npmcommand, ["publish"], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  writeln("done");
+}
+
 pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
 
 if (!config.help && !config.version && config._.length !== 1) {
@@ -408,6 +445,7 @@ default:
   tag();
   getConfigPush();
   push();
+  publish();
   writeln("");
   process.stdout.write(`Released version ${config.version}, without errors`);
 
