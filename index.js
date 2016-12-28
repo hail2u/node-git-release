@@ -113,7 +113,15 @@ function findNpmRoot() {
 // Test
 function test() {
   write("Running npm test: ");
-  const p = JSON.parse(fs.readFileSync(path.join(config.npmroot, "package.json")));
+  let p = path.join(config.npmroot, "package.json");
+
+  if (!fs.existsSync(p)) {
+    writeln("skipped");
+
+    return;
+  }
+
+  p = JSON.parse(fs.readFileSync(p, "utf8"));
 
   if (!p.scripts || !p.scripts.test) {
     writeln("skipped");
