@@ -1,6 +1,6 @@
 {
   "name": "@hail2u/git-release",
-  "description": "Bump semver in multiple files, stage, commit, tag, and optionally push to GitHub",
+  "description": "Automatic release tool for Git",
   "version": "1.2.1",
   "author": "Kyo Nagashima <hail2u@gmail.com> (https://kyonagashima.com/)",
   "bin": {

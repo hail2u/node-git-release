@@ -1,7 +1,7 @@
 git-release
 ===========
 
-Bump semver in multiple files, stage, commit, tag, and optionally push to GitHub
+Automatic release tool for Git
 
 
 INSTALL
@@ -18,7 +18,7 @@ USAGE
       git release [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]
 
     Description:
-      Bump semver in multiple files, stage, commit, tag, and optionally push.
+      Automatic release tool for Git
 
     Options:
       -n, --dry-run  Don"t process files.
