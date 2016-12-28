@@ -116,7 +116,7 @@ function test() {
   let p = path.join(config.npmroot, "package.json");
 
   if (!fs.existsSync(p)) {
-    writeln("skipped");
+    writeln("skipped (package.json not found)");
 
     return;
   }
@@ -124,7 +124,7 @@ function test() {
   p = JSON.parse(fs.readFileSync(p, "utf8"));
 
   if (!p.scripts || !p.scripts.test) {
-    writeln("skipped");
+    writeln("skipped (test not found)");
 
     return;
   }
@@ -318,7 +318,7 @@ function push() {
   write("Pushing commit & tag: ");
 
   if (!config.push) {
-    writeln("skipped");
+    writeln("skipped (config not found)");
 
     return;
   }
