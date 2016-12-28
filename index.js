@@ -117,11 +117,10 @@ function findNpmRoot() {
   writeln(config.npmroot);
 }
 
-// Test
-function test() {
-  write("Running npm test: ");
-
-  let p = path.join(config.npmroot, "package.json");
+// Read package.json
+function readPackageJson() {
+  write("Reading package.json: ");
+  const p = path.join(config.npmroot, "package.json");
 
   if (!fs.existsSync(p)) {
     writeln("skipped (package.json not found)");
@@ -129,9 +128,15 @@ function test() {
     return;
   }
 
-  p = JSON.parse(fs.readFileSync(p, "utf8"));
+  config.npmpkg = JSON.parse(fs.readFileSync(p, "utf8"));
+  writeln("done");
+}
 
-  if (!p.scripts || !p.scripts.test) {
+// Test
+function test() {
+  write("Running npm test: ");
+
+  if (!config.npmpkg.scripts || !config.npmpkg.scripts.test) {
     writeln("skipped (test not found)");
 
     return;
@@ -382,6 +387,7 @@ default:
   config.gitcommand = which("git");
   config.gitroot = "";
   config.npmcommand = which("npm");
+  config.npmpkg = {};
   config.npmroot = "";
   config.options = {
     encoding: "utf8"
@@ -393,6 +399,7 @@ default:
   config.version = "";
   inspect();
   findNpmRoot();
+  readPackageJson();
   test();
   findGitRoot();
   getConfigTarget();
