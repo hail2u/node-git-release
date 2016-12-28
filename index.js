@@ -167,6 +167,10 @@ function getConfigTarget() {
     abort(child.error);
   }
 
+  if (child.status !== 0) {
+    abort(new Error("Config not found."));
+  }
+
   child.stdout
     .trim()
     .split(/\r?\n/)
