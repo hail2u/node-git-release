@@ -197,26 +197,6 @@ function getConfigTarget() {
   writeln("done");
 }
 
-// Get push cnfiguration
-function getConfigPush() {
-  write("Getting push configuration: ");
-  const child = spawn(config.gitcommand, [
-    "config",
-    "--get",
-    "release.push"
-  ], config.options);
-
-  if (child.error) {
-    abort(child.error);
-  }
-
-  if (child.stdout.trim() === "true") {
-    config.push = true;
-  }
-
-  writeln(config.push);
-}
-
 // Increment
 function increment(f, l) {
   write(`Incrementing version in line ${l} of "${f}": `);
@@ -313,6 +293,26 @@ function tag() {
   writeln("done");
 }
 
+// Get push cnfiguration
+function getConfigPush() {
+  write("Getting push configuration: ");
+  const child = spawn(config.gitcommand, [
+    "config",
+    "--get",
+    "release.push"
+  ], config.options);
+
+  if (child.error) {
+    abort(child.error);
+  }
+
+  if (child.stdout.trim() === "true") {
+    config.push = true;
+  }
+
+  writeln(config.push);
+}
+
 // Push
 function push() {
   write("Pushing commit & tag: ");
@@ -382,13 +382,13 @@ default:
   test();
   findGitRoot();
   getConfigTarget();
-  getConfigPush();
   config.targets.forEach(function (target) {
     increment(target.file, target.line);
     stage(target.file);
   });
   commit();
   tag();
+  getConfigPush();
   push();
   writeln("");
   process.stdout.write(`Bumped to ${config.version}, without errors`);
