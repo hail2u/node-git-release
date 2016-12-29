@@ -198,45 +198,43 @@ function getConfigTarget() {
 }
 
 // Increment
-function increment(f, l) {
-  write(`Incrementing version in line ${l} of "${f}": `);
-  l = l - 1;
-  const source = fs.readFileSync(f, "utf8");
-  const le = detectLineEnding(source);
-  const lines = source.split(le);
+function increment() {
+  config.targets.forEach(function (target) {
+    write(`Incrementing version in line ${target.line} of "${target.file}": `);
+    target.line = target.line - 1;
+    const source = fs.readFileSync(target.file, "utf8");
+    const le = detectLineEnding(source);
+    const lines = source.split(le);
 
-  lines[l] = lines[l].replace(config.re, function (old) {
-    if (!config.version) {
-      config.version = semver.inc(old, config.part);
+    lines[target.line] = lines[target.line].replace(config.re, function (old) {
+      if (!config.version) {
+        config.version = semver.inc(old, config.part);
+      }
+
+      return config.version;
+    });
+
+    if (config.dryRun) {
+      writeln("done (dry-run)");
+
+      return;
     }
 
-    return config.version;
+    fs.writeFileSync(target.file, lines.join(le));
+    writeln("done");
+    write(`Staging ${target.file}: `);
+    const child = spawn(config.gitcommand, [
+      "add",
+      "--",
+      target.file
+    ], config.options);
+
+    if (child.error) {
+      abort(child.error);
+    }
+
+    writeln("done");
   });
-
-  if (config.dryRun) {
-    writeln("done (dry-run)");
-
-    return;
-  }
-
-  fs.writeFileSync(f, lines.join(le));
-  writeln("done");
-}
-
-// Stage
-function stage(f) {
-  write(`Staging ${f}: `);
-  const child = spawn(config.gitcommand, [
-    "add",
-    "--",
-    f
-  ], config.options);
-
-  if (child.error) {
-    abort(child.error);
-  }
-
-  writeln("done");
 }
 
 // Commit
@@ -382,10 +380,7 @@ default:
   test();
   findGitRoot();
   getConfigTarget();
-  config.targets.forEach(function (target) {
-    increment(target.file, target.line);
-    stage(target.file);
-  });
+  increment();
   commit();
   tag();
   getConfigPush();
