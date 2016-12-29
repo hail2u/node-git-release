@@ -386,7 +386,7 @@ default:
   getConfigPush();
   push();
   writeln("");
-  process.stdout.write(`Bumped to ${config.version}, without errors`);
+  process.stdout.write(`Released version ${config.version}, without errors`);
 
   if (config.dryRun) {
     process.stdout.write(" (dry-run)");
