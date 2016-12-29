@@ -293,7 +293,7 @@ function tag() {
   writeln("done");
 }
 
-// Get push cnfiguration
+// Get push configuration
 function getConfigPush() {
   write("Getting push configuration: ");
   const child = spawn(config.gitcommand, [
