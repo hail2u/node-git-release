@@ -12,7 +12,6 @@ const which = require("which").sync;
 
 const config = minimist(process.argv.slice(2), {
   alias: {
-    "V": "version",
     "h": "help",
     "n": "dry-run",
     "v": "verbose"
@@ -83,7 +82,7 @@ Options:
   -n, --dry-run  Don’t process files.
   -v, --verbose  Log verbosely.
   -h, --help     Show this message.
-  -V, --version  Print version information.`);
+      --version  Print version information.`);
 }
 
 // Inspect
