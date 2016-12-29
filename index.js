@@ -366,7 +366,7 @@ case config.help:
 default:
   config.dryRun = config["dry-run"];
   config.gitcommand = which("git");
-  config.gitroot = ".git";
+  config.gitroot = "";
   config.npmcommand = which("npm");
   config.npmroot = "";
   config.options = {
@@ -376,6 +376,7 @@ default:
   config.push = false;
   config.re = semver.re[3];
   config.targets = [];
+  config.version = null;
   inspect();
   findNpmRoot();
   test();
