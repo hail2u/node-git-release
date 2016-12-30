@@ -21,7 +21,7 @@ USAGE
       Automatic release tool for Git
 
     Options:
-      -n, --dry-run  Don"t process files.
+      -n, --dry-run  Don’t process files.
       -v, --verbose  Log verbosely.
       -h, --help     Show this message.
       -V, --version  Print version information.
