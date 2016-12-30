@@ -24,7 +24,7 @@ USAGE
       -n, --dry-run  Don’t process files.
       -v, --verbose  Log verbosely.
       -h, --help     Show this message.
-      -V, --version  Print version information.
+          --version  Print version information.
 
     If something occured, command stops with stack trace.
 
