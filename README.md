@@ -58,13 +58,6 @@ You can have multiple target. This can be configured with `--add` option:
     $ git config --add release.target lib/foo.js:7
 
 
-### release.push
-
-Push after tagging a commit (default false):
-
-    $ git config release.push true
-
-
 LICENSE
 -------
 

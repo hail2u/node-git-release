@@ -322,24 +322,24 @@ function tag() {
   writeln("done");
 }
 
-// Get push configuration
-function getConfigPush() {
-  write("Getting push configuration: ");
+// Get remote URL
+function getRemoteURL() {
+  write("Getting remote URL: ");
   const child = spawn(config.gitcommand, [
     "config",
     "--get",
-    "release.push"
+    "remote.origin.url"
   ], config.options);
 
   if (child.error) {
     abort(child.error);
   }
 
-  if (child.stdout.trim() === "true") {
+  if (!child.status) {
     config.push = true;
   }
 
-  writeln(config.push);
+  writeln(child.stdout.trim());
 }
 
 // Push
@@ -347,7 +347,7 @@ function push() {
   write("Pushing commit & tag: ");
 
   if (!config.push) {
-    writeln("skipped (config not found)");
+    writeln("skipped (remote URL not found)");
 
     return;
   }
@@ -463,7 +463,7 @@ default:
   increment();
   commit();
   tag();
-  getConfigPush();
+  getRemoteURL();
   push();
   publish();
   writeln("");
