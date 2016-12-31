@@ -71,7 +71,6 @@ function detectLineEnding(string) {
 }
 
 function showHelp() {
-  pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
   console.log(`Usage:
   ${pkg.name} [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]
 
@@ -343,6 +342,8 @@ function push() {
 
   writeln("done");
 }
+
+pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
 
 if (!config.help && !config.version && config._.length !== 1) {
   showHelp();
