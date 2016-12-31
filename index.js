@@ -5,7 +5,6 @@
 const fs = require("fs");
 const minimist = require("minimist");
 const path = require("path");
-const pkg = require("./package.json");
 const semver = require("semver");
 const spawn = require("child_process").spawnSync;
 const which = require("which").sync;
@@ -29,6 +28,7 @@ const config = minimist(process.argv.slice(2), {
     "version": false
   }
 });
+const pkg = require("./package.json");
 
 function write(msg) {
   if (config.verbose) {
