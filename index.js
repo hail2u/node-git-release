@@ -19,6 +19,7 @@ const config = minimist(process.argv.slice(2), {
     "dry-run",
     "help",
     "no-publish",
+    "no-push",
     "no-test",
     "verbose",
     "version"
@@ -27,6 +28,7 @@ const config = minimist(process.argv.slice(2), {
     "dry-run": false,
     "help": false,
     "no-publish": false,
+    "no-push": false,
     "no-test": false,
     "verbose": false,
     "version": false
@@ -83,6 +85,7 @@ Description:
 
 Options:
       --no-test     Don’t test.
+      --no-push     Don’t push releases.
       --no-publish  Don’t publish.
   -n, --dry-run     Don’t process files.
   -v, --verbose     Log verbosely.
@@ -335,18 +338,26 @@ function getRemoteURL() {
     abort(child.error);
   }
 
-  if (!child.status) {
-    config.push = true;
+  config.remoteURL = child.stdout.trim();
+
+  if (!config.remoteURL) {
+    config.remoteURL = "N/A";
   }
 
-  writeln(child.stdout.trim());
+  writeln(config.remoteURL);
 }
 
 // Push
 function push() {
   write("Pushing commit & tag: ");
 
-  if (!config.push) {
+  if (config.noPush) {
+    writeln("skipped (--no-push option found)");
+
+    return;
+  }
+
+  if (config.remoteURL === "N/A") {
     writeln("skipped (remote URL not found)");
 
     return;
@@ -442,6 +453,7 @@ default:
   config.gitcommand = which("git");
   config.gitroot = "";
   config.noPublish = config["no-publish"];
+  config.noPush = config["no-push"];
   config.noTest = config["no-test"];
   config.npmcommand = which("npm");
   config.npmpkg = {};
@@ -449,8 +461,8 @@ default:
   config.options = {
     encoding: "utf8"
   };
-  config.push = false;
   config.re = semver.re[3];
+  config.remoteURL = "";
   config.targets = [];
   config.type = config._[0];
   config.version = "";

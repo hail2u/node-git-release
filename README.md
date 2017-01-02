@@ -22,6 +22,7 @@ USAGE
     
     Options:
           --no-test     Don’t test.
+          --no-push     Don’t push releases.
           --no-publish  Don’t publish.
       -n, --dry-run     Don’t process files.
       -v, --verbose     Log verbosely.
