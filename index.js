@@ -374,7 +374,7 @@ default:
   config.push = false;
   config.re = semver.re[3];
   config.targets = [];
-  config.version = null;
+  config.version = "";
   inspect();
   findNpmRoot();
   test();
