@@ -362,8 +362,8 @@ function push() {
 pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
 
 if (!config.help && !config.version && config._.length !== 1) {
-  showHelp();
-  process.exit(1);
+  config.help = true;
+  config.badArgs = true;
 }
 
 switch (true) {
@@ -409,4 +409,8 @@ default:
   }
 
   console.log("");
+}
+
+if (config.badArgs) {
+  process.exit(1);
 }
