@@ -111,6 +111,7 @@ function findNpmRoot() {
 // Test
 function test() {
   write("Running npm test: ");
+
   let p = path.join(config.npmroot, "package.json");
 
   if (!fs.existsSync(p)) {
@@ -123,6 +124,12 @@ function test() {
 
   if (!p.scripts || !p.scripts.test) {
     writeln("skipped (test not found)");
+
+    return;
+  }
+
+  if (config.dryRun) {
+    writeln("done (dry-run)");
 
     return;
   }
