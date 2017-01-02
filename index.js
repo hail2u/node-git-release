@@ -392,5 +392,5 @@ default:
     process.stdout.write(" (dry-run)");
   }
 
-  console.log(".");
+  console.log("");
 }
