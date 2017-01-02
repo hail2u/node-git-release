@@ -72,7 +72,7 @@ function detectLineEnding(string) {
 
 function showHelp() {
   console.log(`Usage:
-  ${pkg.name} [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]
+  ${pkg.name} [options] <type>
 
 Description:
   ${pkg.description}
@@ -81,18 +81,27 @@ Options:
   -n, --dry-run  Don’t process files.
   -v, --verbose  Log verbosely.
   -h, --help     Show this message.
-      --version  Print version information.`);
+      --version  Print version information.
+
+Type:
+  - major
+  - premajor
+  - minor
+  - preminor
+  - patch
+  - prepatch
+  - prerelease`);
 }
 
 // Inspect
 function inspect() {
-  write("Inspecting increment part: ");
+  write("Inspecting release type: ");
 
-  if (!config.part.match(/^((pre)?(major|minor|patch)|prerelease)$/)) {
-    abort(new Error(`${config.part} is not "(pre)major", "(pre)minor", "(pre)patch", or "prerelease".`));
+  if (!config.type.match(/^((pre)?(major|minor|patch)|prerelease)$/)) {
+    abort(new Error(`${config.type} is not "major", "premajor", "minor", "preminor", "patch", "prepatch" or "prerelease".`));
   }
 
-  writeln(config.part);
+  writeln(config.type);
 }
 
 // Find npm root
@@ -213,7 +222,7 @@ function increment() {
 
     lines[target.line] = lines[target.line].replace(config.re, function (old) {
       if (!config.version) {
-        config.version = semver.inc(old, config.part);
+        config.version = semver.inc(old, config.type);
       }
 
       return config.version;
@@ -377,10 +386,10 @@ default:
   config.options = {
     encoding: "utf8"
   };
-  config.part = config._[0];
   config.push = false;
   config.re = semver.re[3];
   config.targets = [];
+  config.type = config._[0];
   config.version = "";
   inspect();
   findNpmRoot();
