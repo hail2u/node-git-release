@@ -18,18 +18,18 @@ const config = minimist(process.argv.slice(2), {
   boolean: [
     "dry-run",
     "help",
-    "no-publish",
-    "no-push",
-    "no-test",
+    "publish",
+    "push",
+    "test",
     "verbose",
     "version"
   ],
   default: {
     "dry-run": false,
     "help": false,
-    "no-publish": false,
-    "no-push": false,
-    "no-test": false,
+    "publish": true,
+    "push": true,
+    "test": true,
     "verbose": false,
     "version": false
   }
@@ -145,7 +145,7 @@ function readPackageJson() {
 function test() {
   write("Running npm test: ");
 
-  if (config.noTest) {
+  if (!config.test) {
     writeln("skipped (--no-test option found)");
 
     return;
@@ -351,7 +351,7 @@ function getRemoteURL() {
 function push() {
   write("Pushing commit & tag: ");
 
-  if (config.noPush) {
+  if (!config.push) {
     writeln("skipped (--no-push option found)");
 
     return;
@@ -391,7 +391,7 @@ function push() {
 function publish() {
   write("Publishing package: ");
 
-  if (config.noPublish) {
+  if (!config.publish) {
     writeln("skipped (--no-publish option found)");
 
     return;
@@ -452,9 +452,6 @@ default:
   config.dryRun = config["dry-run"];
   config.gitcommand = which("git");
   config.gitroot = "";
-  config.noPublish = config["no-publish"];
-  config.noPush = config["no-push"];
-  config.noTest = config["no-test"];
   config.npmcommand = which("npm");
   config.npmpkg = {};
   config.npmroot = "";
