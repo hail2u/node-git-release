@@ -15,18 +15,27 @@ USAGE
 
     $ git release -h
     Usage:
-      git release [options] [major|minor|patch|premajor|preminor|prepatch|prerelease]
-
+      git release [options] <type>
+    
     Description:
       Automatic release tool for Git
-
+    
     Options:
-      -n, --dry-run  Don’t process files.
-      -v, --verbose  Log verbosely.
-      -h, --help     Show this message.
-          --version  Print version information.
+      -n, --dry-run     Don’t process files.
+      -v, --verbose     Log verbosely.
+      -h, --help        Show this message.
+          --version     Print version information.
+    
+    Type:
+      - major
+      - premajor
+      - minor
+      - preminor
+      - patch
+      - prepatch
+      - prerelease
 
-    If something occured, command stops with stack trace.
+If something occured, command stops with stack trace.
 
 
 OPTIONS
