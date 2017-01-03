@@ -13,7 +13,7 @@ INSTALL
 USAGE
 -----
 
-    $ git release -h
+    $ git release --help
     Usage:
       git release [options] <type>
     
