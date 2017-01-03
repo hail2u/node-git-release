@@ -18,12 +18,16 @@ const config = minimist(process.argv.slice(2), {
   boolean: [
     "dry-run",
     "help",
+    "no-publish",
+    "no-test",
     "verbose",
     "version"
   ],
   default: {
     "dry-run": false,
     "help": false,
+    "no-publish": false,
+    "no-test": false,
     "verbose": false,
     "version": false
   }
@@ -78,10 +82,12 @@ Description:
   ${pkg.description}
 
 Options:
-  -n, --dry-run  Don’t process files.
-  -v, --verbose  Log verbosely.
-  -h, --help     Show this message.
-      --version  Print version information.
+      --no-test     Don’t test.
+      --no-publish  Don’t publish.
+  -n, --dry-run     Don’t process files.
+  -v, --verbose     Log verbosely.
+  -h, --help        Show this message.
+      --version     Print version information.
 
 Type:
   - major
@@ -135,6 +141,12 @@ function readPackageJson() {
 // Test
 function test() {
   write("Running npm test: ");
+
+  if (config.noTest) {
+    writeln("skipped (--no-test option found)");
+
+    return;
+  }
 
   if (!config.npmpkg.scripts || !config.npmpkg.scripts.test) {
     writeln("skipped (test not found)");
@@ -368,6 +380,12 @@ function push() {
 function publish() {
   write("Publishing package: ");
 
+  if (config.noPublish) {
+    writeln("skipped (--no-publish option found)");
+
+    return;
+  }
+
   if (!config.npmpkg.version) {
     writeln("skipped (not a npm package)");
 
@@ -423,6 +441,8 @@ default:
   config.dryRun = config["dry-run"];
   config.gitcommand = which("git");
   config.gitroot = "";
+  config.noPublish = config["no-publish"];
+  config.noTest = config["no-test"];
   config.npmcommand = which("npm");
   config.npmpkg = {};
   config.npmroot = "";

@@ -21,6 +21,8 @@ USAGE
       Automatic release tool for Git
     
     Options:
+          --no-test     Don’t test.
+          --no-publish  Don’t publish.
       -n, --dry-run     Don’t process files.
       -v, --verbose     Log verbosely.
       -h, --help        Show this message.
