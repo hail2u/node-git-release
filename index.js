@@ -36,21 +36,23 @@ const config = minimist(process.argv.slice(2), {
 });
 const pkg = require("./package.json");
 
-function write(msg) {
-  if (config.verbose) {
-    process.stdout.write(msg);
+function write(msg, ln) {
+  if (!config.verbose) {
+    return;
   }
-}
 
-function writeln(msg) {
-  if (config.verbose) {
+  if (ln) {
     console.log(msg);
+
+    return;
   }
+
+  process.stdout.write(msg);
 }
 
 function abort(err) {
   if (err) {
-    writeln("aborted");
+    write("aborted", true);
 
     throw err;
   }
@@ -110,7 +112,7 @@ function inspect() {
     abort(new Error(`${config.type} is not "major", "premajor", "minor", "preminor", "patch", "prepatch" or "prerelease".`));
   }
 
-  writeln(config.type);
+  write(config.type, true);
 }
 
 // Find npm root
@@ -123,7 +125,7 @@ function findNpmRoot() {
   }
 
   config.npmroot = path.normalize(child.stdout.trim());
-  writeln(config.npmroot);
+  write(config.npmroot, true);
 }
 
 // Read package.json
@@ -132,13 +134,13 @@ function readPackageJson() {
   const p = path.join(config.npmroot, "package.json");
 
   if (!fs.existsSync(p)) {
-    writeln("skipped (package.json not found)");
+    write("skipped (package.json not found)", true);
 
     return;
   }
 
   config.npmpkg = JSON.parse(fs.readFileSync(p, "utf8"));
-  writeln("done");
+  write("done", true);
 }
 
 // Test
@@ -146,19 +148,19 @@ function test() {
   write("Running npm test: ");
 
   if (!config.test) {
-    writeln("skipped (--no-test option found)");
+    write("skipped (--no-test option found)", true);
 
     return;
   }
 
   if (!config.npmpkg.scripts || !config.npmpkg.scripts.test) {
-    writeln("skipped (test not found)");
+    write("skipped (test not found)", true);
 
     return;
   }
 
   if (config.dryRun) {
-    writeln("done (dry-run)");
+    write("done (dry-run)", true);
 
     return;
   }
@@ -169,7 +171,7 @@ function test() {
     abort(child.error);
   }
 
-  writeln("done");
+  write("done", true);
 }
 
 // Find Git root
@@ -185,7 +187,7 @@ function findGitRoot() {
   }
 
   config.gitroot = path.normalize(child.stdout.trim());
-  writeln(config.gitroot);
+  write(config.gitroot, true);
 }
 
 // Get target configuration
@@ -228,7 +230,7 @@ function getConfigTarget() {
         "line": line
       });
     });
-  writeln("done");
+  write("done", true);
 }
 
 // Increment
@@ -249,13 +251,13 @@ function increment() {
     });
 
     if (config.dryRun) {
-      writeln("done (dry-run)");
+      write("done (dry-run)", true);
 
       return;
     }
 
     fs.writeFileSync(target.file, lines.join(le));
-    writeln("done");
+    write("done", true);
     write(`Staging ${target.file}: `);
     const child = spawn(config.gitcommand, [
       "add",
@@ -267,7 +269,7 @@ function increment() {
       abort(child.error);
     }
 
-    writeln("done");
+    write("done", true);
   });
 }
 
@@ -276,7 +278,7 @@ function commit() {
   write("Commiting changes: ");
 
   if (config.dryRun) {
-    writeln("done (dry-run)");
+    write("done (dry-run)", true);
 
     return;
   }
@@ -296,7 +298,7 @@ function commit() {
     abort(new Error(child.stderr));
   }
 
-  writeln("done");
+  write("done", true);
 }
 
 // Tag
@@ -304,7 +306,7 @@ function tag() {
   write("Tagging commit: ");
 
   if (config.dryRun) {
-    writeln("done (dry-run)");
+    write("done (dry-run)", true);
 
     return;
   }
@@ -322,7 +324,7 @@ function tag() {
     abort(new Error(child.stderr));
   }
 
-  writeln("done");
+  write("done", true);
 }
 
 // Get remote URL
@@ -344,7 +346,7 @@ function getRemoteURL() {
     config.remoteURL = "N/A";
   }
 
-  writeln(config.remoteURL);
+  write(config.remoteURL, true);
 }
 
 // Push
@@ -352,19 +354,19 @@ function push() {
   write("Pushing commit & tag: ");
 
   if (!config.push) {
-    writeln("skipped (--no-push option found)");
+    write("skipped (--no-push option found)", true);
 
     return;
   }
 
   if (config.remoteURL === "N/A") {
-    writeln("skipped (remote URL not found)");
+    write("skipped (remote URL not found)", true);
 
     return;
   }
 
   if (config.dryRun) {
-    writeln("done (dry-run)");
+    write("done (dry-run)", true);
 
     return;
   }
@@ -384,7 +386,7 @@ function push() {
     abort(new Error(child.stderr));
   }
 
-  writeln("done");
+  write("done", true);
 }
 
 // Publish
@@ -392,31 +394,31 @@ function publish() {
   write("Publishing package: ");
 
   if (!config.publish) {
-    writeln("skipped (--no-publish option found)");
+    write("skipped (--no-publish option found)", true);
 
     return;
   }
 
   if (!config.npmpkg.version) {
-    writeln("skipped (not a npm package)");
+    write("skipped (not a npm package)", true);
 
     return;
   }
 
   if (config.npmpkg.private === true) {
-    writeln("skipped (private npm package)");
+    write("skipped (private npm package)", true);
 
     return;
   }
 
   if (config.npmpkg.publishConfig) {
-    writeln("skipped (publishing private repository not supported)");
+    write("skipped (publishing private repository not supported)", true);
 
     return;
   }
 
   if (config.dryRun) {
-    writeln("done (dry-run)");
+    write("done (dry-run)", true);
 
     return;
   }
@@ -427,7 +429,7 @@ function publish() {
     abort(child.error);
   }
 
-  writeln("done");
+  write("done", true);
 }
 
 pkg.name = pkg.name.replace(/@.*?\//, "").replace(/-/g, " ");
@@ -475,14 +477,14 @@ default:
   getRemoteURL();
   push();
   publish();
-  writeln("");
-  process.stdout.write(`Released version ${config.version}, without errors`);
+  write("", true);
+  write(`Released version ${config.version}, without errors`);
 
   if (config.dryRun) {
-    process.stdout.write(" (dry-run)");
+    write(" (dry-run)");
   }
 
-  console.log("");
+  write("", true);
 }
 
 if (config.badArgs) {
