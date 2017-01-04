@@ -478,13 +478,13 @@ default:
   push();
   publish();
   write("", true);
-  write(`Released version ${config.version}, without errors`);
+  process.stdout.write(`Released version ${config.version}, without errors`);
 
   if (config.dryRun) {
-    write(" (dry-run)");
+    process.stdout.write(" (dry-run)");
   }
 
-  write("", true);
+  console.log("");
 }
 
 if (config.badArgs) {
