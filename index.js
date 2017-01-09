@@ -440,13 +440,13 @@ if (!config.help && !config.version && config._.length !== 1) {
 }
 
 switch (true) {
-case config.version:
-  console.log(`${pkg.name} v${pkg.version}`);
+case config.help:
+  showHelp();
 
   break;
 
-case config.help:
-  showHelp();
+case config.version:
+  console.log(`${pkg.name} v${pkg.version}`);
 
   break;
 
