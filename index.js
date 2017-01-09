@@ -104,7 +104,6 @@ Type:
   - prerelease`);
 }
 
-// Inspect
 function inspect() {
   write("Inspecting release type: ");
 
@@ -115,7 +114,6 @@ function inspect() {
   write(config.type, true);
 }
 
-// Find npm root
 function findNpmRoot() {
   write("Finding npm root: ");
   const child = spawn(config.npmcommand, ["prefix"], config.options);
@@ -128,7 +126,6 @@ function findNpmRoot() {
   write(config.npmroot, true);
 }
 
-// Read package.json
 function readPackageJson() {
   write("Reading package.json: ");
   const p = path.join(config.npmroot, "package.json");
@@ -143,7 +140,6 @@ function readPackageJson() {
   write("done", true);
 }
 
-// Test
 function test() {
   write("Running npm test: ");
 
@@ -174,7 +170,6 @@ function test() {
   write("done", true);
 }
 
-// Find Git root
 function findGitRoot() {
   write("Finding Git root: ");
   const child = spawn(config.gitcommand, [
@@ -190,7 +185,6 @@ function findGitRoot() {
   write(config.gitroot, true);
 }
 
-// Get target configuration
 function getConfigTarget() {
   write("Getting target configuration: ");
   const child = spawn(config.gitcommand, [
@@ -233,7 +227,6 @@ function getConfigTarget() {
   write("done", true);
 }
 
-// Increment
 function increment() {
   config.targets.forEach(function (target) {
     write(`Incrementing version in line ${target.line} of "${target.file}": `);
@@ -273,7 +266,6 @@ function increment() {
   });
 }
 
-// Commit
 function commit() {
   write("Commiting changes: ");
 
@@ -301,7 +293,6 @@ function commit() {
   write("done", true);
 }
 
-// Tag
 function tag() {
   write("Tagging commit: ");
 
@@ -327,7 +318,6 @@ function tag() {
   write("done", true);
 }
 
-// Get remote URL
 function getRemoteURL() {
   write("Getting remote URL: ");
   const child = spawn(config.gitcommand, [
@@ -349,7 +339,6 @@ function getRemoteURL() {
   write(config.remoteURL, true);
 }
 
-// Push
 function push() {
   write("Pushing commit & tag: ");
 
@@ -389,7 +378,6 @@ function push() {
   write("done", true);
 }
 
-// Publish
 function publish() {
   write("Publishing package: ");
 
