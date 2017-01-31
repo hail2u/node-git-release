@@ -116,13 +116,13 @@ function inspect() {
 
 function findNpmRoot() {
   write("Finding npm root: ");
-  const child = spawn(config.npmcommand, ["prefix"], config.options);
+  const c = spawn(config.npmcommand, ["prefix"], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  config.npmroot = path.normalize(child.stdout.trim());
+  config.npmroot = path.normalize(c.stdout.trim());
   write(config.npmroot, true);
 }
 
@@ -161,10 +161,10 @@ function test() {
     return;
   }
 
-  const child = spawn(config.npmcommand, ["test"], config.options);
+  const c = spawn(config.npmcommand, ["test"], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
   write("done", true);
@@ -172,42 +172,42 @@ function test() {
 
 function findGitRoot() {
   write("Finding Git root: ");
-  const child = spawn(config.gitcommand, [
+  const c = spawn(config.gitcommand, [
     "rev-parse",
     "--show-toplevel"
   ], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  config.gitroot = path.normalize(child.stdout.trim());
+  config.gitroot = path.normalize(c.stdout.trim());
   write(config.gitroot, true);
 }
 
 function getConfigTarget() {
   write("Getting target configuration: ");
-  const child = spawn(config.gitcommand, [
+  const c = spawn(config.gitcommand, [
     "config",
     "--get-all",
     "release.target"
   ], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  if (child.status !== 0) {
+  if (c.status !== 0) {
     abort(new Error("Config not found."));
   }
 
-  child.stdout
+  c.stdout
     .trim()
     .split(/\r?\n/)
     .forEach(function (target) {
-      const colon = target.lastIndexOf(":");
-      const line = target.slice(colon + 1);
-      let file = target.slice(0, colon);
+      const s = target.lastIndexOf(":");
+      const l = target.slice(s + 1);
+      let file = target.slice(0, s);
 
       file = path.relative(process.cwd(), path.join(config.gitroot, file));
 
@@ -215,13 +215,13 @@ function getConfigTarget() {
         abort(new Error(`File "${file}" not found.`));
       }
 
-      if (!line.match(/^\d+$/)) {
-        abort(new Error(`"${line}" is not valid line number.`));
+      if (!l.match(/^\d+$/)) {
+        abort(new Error(`"${l}" is not valid line number.`));
       }
 
       config.targets.push({
         "file": file,
-        "line": line
+        "line": l
       });
     });
   write("done", true);
@@ -231,11 +231,11 @@ function increment() {
   config.targets.forEach(function (target) {
     write(`Incrementing version in line ${target.line} of "${target.file}": `);
     target.line = target.line - 1;
-    const source = fs.readFileSync(target.file, "utf8");
-    const le = detectLineEnding(source);
-    const lines = source.split(le);
+    let s = fs.readFileSync(target.file, "utf8");
+    const n = detectLineEnding(s);
 
-    lines[target.line] = lines[target.line].replace(config.re, function (old) {
+    s = s.split(n);
+    s[target.line] = s[target.line].replace(config.re, function (old) {
       if (!config.version) {
         config.version = semver.inc(old, config.type);
       }
@@ -249,17 +249,17 @@ function increment() {
       return;
     }
 
-    fs.writeFileSync(target.file, lines.join(le));
+    fs.writeFileSync(target.file, s.join(n));
     write("done", true);
     write(`Staging ${target.file}: `);
-    const child = spawn(config.gitcommand, [
+    const c = spawn(config.gitcommand, [
       "add",
       "--",
       target.file
     ], config.options);
 
-    if (child.error) {
-      abort(child.error);
+    if (c.error) {
+      abort(c.error);
     }
 
     write("done", true);
@@ -275,19 +275,19 @@ function commit() {
     return;
   }
 
-  const child = spawn(config.gitcommand, [
+  const c = spawn(config.gitcommand, [
     "commit",
     "--edit",
     `--message=Version ${config.version}`,
     "--verbose"
   ], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  if (child.status && child.stderr) {
-    abort(new Error(child.stderr));
+  if (c.status && c.stderr) {
+    abort(new Error(c.stderr));
   }
 
   write("done", true);
@@ -302,17 +302,17 @@ function tag() {
     return;
   }
 
-  const child = spawn(config.gitcommand, [
+  const c = spawn(config.gitcommand, [
     "tag",
     `v${config.version}`
   ], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  if (child.status && child.stderr) {
-    abort(new Error(child.stderr));
+  if (c.status && c.stderr) {
+    abort(new Error(c.stderr));
   }
 
   write("done", true);
@@ -320,17 +320,17 @@ function tag() {
 
 function getRemoteURL() {
   write("Getting remote URL: ");
-  const child = spawn(config.gitcommand, [
+  const c = spawn(config.gitcommand, [
     "config",
     "--get",
     "remote.origin.url"
   ], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  config.remoteURL = child.stdout.trim();
+  config.remoteURL = c.stdout.trim();
 
   if (!config.remoteURL) {
     config.remoteURL = "N/A";
@@ -360,19 +360,19 @@ function push() {
     return;
   }
 
-  const child = spawn(config.gitcommand, [
+  const c = spawn(config.gitcommand, [
     "push",
     "origin",
     "HEAD",
     `v${config.version}`
   ], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
-  if (child.status && child.stderr) {
-    abort(new Error(child.stderr));
+  if (c.status && c.stderr) {
+    abort(new Error(c.stderr));
   }
 
   write("done", true);
@@ -411,10 +411,10 @@ function publish() {
     return;
   }
 
-  const child = spawn(config.npmcommand, ["publish"], config.options);
+  const c = spawn(config.npmcommand, ["publish"], config.options);
 
-  if (child.error) {
-    abort(child.error);
+  if (c.error) {
+    abort(c.error);
   }
 
   write("done", true);
