@@ -204,15 +204,16 @@ function getConfigTarget() {
   c.stdout
     .trim()
     .split(/\r?\n/)
-    .forEach(function (target) {
+    .forEach((target) => {
       const s = target.lastIndexOf(":");
       const l = target.slice(s + 1);
-      let file = target.slice(0, s);
+      const f = path.relative(
+        process.cwd(),
+        path.join(config.gitroot, target.slice(0, s))
+      );
 
-      file = path.relative(process.cwd(), path.join(config.gitroot, file));
-
-      if (!fs.existsSync(file)) {
-        abort(new Error(`File "${file}" not found.`));
+      if (!fs.existsSync(f)) {
+        abort(new Error(`File "${f}" not found.`));
       }
 
       if (!l.match(/^\d+$/)) {
@@ -220,7 +221,7 @@ function getConfigTarget() {
       }
 
       config.targets.push({
-        "file": file,
+        "file": f,
         "line": l
       });
     });
@@ -228,14 +229,14 @@ function getConfigTarget() {
 }
 
 function increment() {
-  config.targets.forEach(function (target) {
+  config.targets.forEach((target) => {
     write(`Incrementing version in line ${target.line} of "${target.file}": `);
     target.line = target.line - 1;
     let s = fs.readFileSync(target.file, "utf8");
     const n = detectLineEnding(s);
 
     s = s.split(n);
-    s[target.line] = s[target.line].replace(config.re, function (old) {
+    s[target.line] = s[target.line].replace(config.re, (old) => {
       if (!config.version) {
         config.version = semver.inc(old, config.type);
       }
