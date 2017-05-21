@@ -2,11 +2,11 @@
 
 "use strict";
 
+const execFile = require("child_process").execFileSync;
 const fs = require("fs");
 const minimist = require("minimist");
 const path = require("path");
 const semver = require("semver");
-const spawn = require("child_process").spawnSync;
 const which = require("which").sync;
 
 const config = minimist(process.argv.slice(2), {
@@ -106,6 +106,7 @@ Type:
 
 function inspect() {
   write("Inspecting release type: ");
+  write("Inspecting release type: ");
 
   if (!config.type.match(/^((pre)?(major|minor|patch)|prerelease)$/)) {
     abort(new Error(`${config.type} is not "major", "premajor", "minor", "preminor", "patch", "prepatch" or "prerelease".`));
@@ -116,13 +117,9 @@ function inspect() {
 
 function findNpmRoot() {
   write("Finding npm root: ");
-  const c = spawn(config.npmcommand, ["prefix"], config.options);
+  const o = execFile(config.npmcommand, ["prefix"], config.options);
 
-  if (c.error) {
-    abort(c.error);
-  }
-
-  config.npmroot = path.normalize(c.stdout.trim());
+  config.npmroot = path.normalize(o.trim());
   write(config.npmroot, true);
 }
 
@@ -161,48 +158,30 @@ function test() {
     return;
   }
 
-  const c = spawn(config.npmcommand, ["test"], config.options);
-
-  if (c.error) {
-    abort(c.error);
-  }
-
+  execFile(config.npmcommand, ["test"], config.options);
   write("done", true);
 }
 
 function findGitRoot() {
   write("Finding Git root: ");
-  const c = spawn(config.gitcommand, [
+  const o = execFile(config.gitcommand, [
     "rev-parse",
     "--show-toplevel"
   ], config.options);
 
-  if (c.error) {
-    abort(c.error);
-  }
-
-  config.gitroot = path.normalize(c.stdout.trim());
+  config.gitroot = path.normalize(o.trim());
   write(config.gitroot, true);
 }
 
 function getConfigTarget() {
   write("Getting target configuration: ");
-  const c = spawn(config.gitcommand, [
+  const o = execFile(config.gitcommand, [
     "config",
     "--get-all",
     "release.target"
   ], config.options);
 
-  if (c.error) {
-    abort(c.error);
-  }
-
-  if (c.status !== 0) {
-    abort(new Error("Config not found."));
-  }
-
-  c.stdout
-    .trim()
+  o.trim()
     .split(/\r?\n/)
     .forEach((target) => {
       const s = target.lastIndexOf(":");
@@ -253,16 +232,11 @@ function increment() {
     fs.writeFileSync(target.file, s.join(n));
     write("done", true);
     write(`Staging ${target.file}: `);
-    const c = spawn(config.gitcommand, [
+    execFile(config.gitcommand, [
       "add",
       "--",
       target.file
     ], config.options);
-
-    if (c.error) {
-      abort(c.error);
-    }
-
     write("done", true);
   });
 }
@@ -276,21 +250,12 @@ function commit() {
     return;
   }
 
-  const c = spawn(config.gitcommand, [
+  execFile(config.gitcommand, [
     "commit",
     "--edit",
     `--message=Version ${config.version}`,
     "--verbose"
   ], config.options);
-
-  if (c.error) {
-    abort(c.error);
-  }
-
-  if (c.status && c.stderr) {
-    abort(new Error(c.stderr));
-  }
-
   write("done", true);
 }
 
@@ -303,35 +268,22 @@ function tag() {
     return;
   }
 
-  const c = spawn(config.gitcommand, [
+  execFile(config.gitcommand, [
     "tag",
     `v${config.version}`
   ], config.options);
-
-  if (c.error) {
-    abort(c.error);
-  }
-
-  if (c.status && c.stderr) {
-    abort(new Error(c.stderr));
-  }
-
   write("done", true);
 }
 
 function getRemoteURL() {
   write("Getting remote URL: ");
-  const c = spawn(config.gitcommand, [
+  const o = execFile(config.gitcommand, [
     "config",
     "--get",
     "remote.origin.url"
   ], config.options);
 
-  if (c.error) {
-    abort(c.error);
-  }
-
-  config.remoteURL = c.stdout.trim();
+  config.remoteURL = o.trim();
 
   if (!config.remoteURL) {
     config.remoteURL = "N/A";
@@ -361,21 +313,12 @@ function push() {
     return;
   }
 
-  const c = spawn(config.gitcommand, [
+  execFile(config.gitcommand, [
     "push",
     "origin",
     "HEAD",
     `v${config.version}`
   ], config.options);
-
-  if (c.error) {
-    abort(c.error);
-  }
-
-  if (c.status && c.stderr) {
-    abort(new Error(c.stderr));
-  }
-
   write("done", true);
 }
 
@@ -412,12 +355,7 @@ function publish() {
     return;
   }
 
-  const c = spawn(config.npmcommand, ["publish"], config.options);
-
-  if (c.error) {
-    abort(c.error);
-  }
-
+  execFile(config.npmcommand, ["publish"], config.options);
   write("done", true);
 }
 
