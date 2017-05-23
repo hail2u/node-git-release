@@ -385,7 +385,8 @@ default:
   config.npmpkg = {};
   config.npmroot = "";
   config.options = {
-    encoding: "utf8"
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "ignore"]
   };
   config.re = semver.re[3];
   config.remoteURL = "";
