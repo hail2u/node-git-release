@@ -241,19 +241,47 @@ function increment() {
   });
 }
 
-function commit() {
-  write("Commiting changes: ");
+function update() {
+  write("Updating packages: ");
 
-  if (config.dryRun) {
+  if (!config.npmpkg.version) {
+    write("skipped (not a npm package)", true);
+
+    return;
+  }
+
+  if (config.dryrun) {
     write("done (dry-run)", true);
 
     return;
   }
 
+  execfile(config.npmcommand, ["update"], config.options);
+  write("done", true);
+  test();
+  write(`Staging package.json & package-lock.json: `);
   execFile(config.gitcommand, [
+    "add",
+    "--",
+    "package.json",
+    "package-lock.json"
+  ], config.options);
+  write("done", true);
+}
+
+function commit() {
+  write("commiting changes: ");
+
+  if (config.dryrun) {
+    write("done (dry-run)", true);
+
+    return;
+  }
+
+  execfile(config.gitcommand, [
     "commit",
     "--edit",
-    `--message=Version ${config.version}`,
+    `--message=version ${config.version}`,
     "--verbose"
   ], config.options);
   write("done", true);
@@ -400,6 +428,7 @@ default:
   findGitRoot();
   getConfigTarget();
   increment();
+  update();
   commit();
   tag();
   getRemoteURL();
