@@ -250,13 +250,13 @@ function update() {
     return;
   }
 
-  if (config.dryrun) {
+  if (config.dryRun) {
     write("done (dry-run)", true);
 
     return;
   }
 
-  execfile(config.npmcommand, ["update"], config.options);
+  execFile(config.npmcommand, ["update"], config.options);
   write("done", true);
   test();
   write(`Staging package.json & package-lock.json: `);
@@ -272,16 +272,16 @@ function update() {
 function commit() {
   write("Commiting changes: ");
 
-  if (config.dryrun) {
+  if (config.dryRun) {
     write("done (dry-run)", true);
 
     return;
   }
 
-  execfile(config.gitcommand, [
+  execFile(config.gitcommand, [
     "commit",
     "--edit",
-    `--message=version ${config.version}`,
+    `--message=Version ${config.version}`,
     "--verbose"
   ], config.options);
   write("done", true);
