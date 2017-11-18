@@ -1,7 +1,7 @@
 {
   "name": "@hail2u/git-release",
   "description": "Automatic release tool for Git",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "author": "Kyo Nagashima <hail2u@gmail.com> (https://kyonagashima.com/)",
   "bin": {
     "git-release": "./index.js"
