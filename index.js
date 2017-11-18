@@ -270,7 +270,7 @@ function update() {
 }
 
 function commit() {
-  write("commiting changes: ");
+  write("Commiting changes: ");
 
   if (config.dryrun) {
     write("done (dry-run)", true);
